@@ -74,12 +74,12 @@ async function checkExpiryAndNotify() {
 
     // 5. Notify Store Owners
     for (const [storeId, storeProducts] of Object.entries(productsByStore)) {
-        // Get store users (admin/gerente)
+        // Get store users (gerente only)
         const { data: users, error: userError } = await supabase
             .from('user_profiles')
             .select('email, full_name')
             .eq('store_id', storeId)
-            .in('role', ['admin', 'gerente']);
+            .eq('role', 'gerente');
 
         if (userError || !users || users.length === 0) {
             console.log(`No users found for store ${storeId}`);
