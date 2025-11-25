@@ -98,7 +98,7 @@ async function checkExpiryAndNotify() {
 
             try {
                 const { data, error } = await resend.emails.send({
-                    from: 'Alertas KPIS <noreply@dexon.pt>',
+                    from: 'Alertas DLC vencida <noreply@dexon.pt>',
                     to: [user.email],
                     subject: `⚠️ Alerta de Validade - ${storeName}`,
                     html: `
