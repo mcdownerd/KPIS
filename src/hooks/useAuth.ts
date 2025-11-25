@@ -48,16 +48,16 @@ export function useAuth() {
         loadInitialAuth()
 
         const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-            console.log('[useAuth] Event:', event, 'Has session:', !!session, 'User ID:', session?.user?.id)
+            // console.log('[useAuth] Event:', event, 'Has session:', !!session, 'User ID:', session?.user?.id)
 
             // Carregar perfil no SIGNED_IN e INITIAL_SESSION (F5)
             if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-                console.log('[useAuth] Loading profile for event:', event)
+                // console.log('[useAuth] Loading profile for event:', event)
                 setUser(session.user)
                 setLoading(true)
                 try {
                     const userProfile = await getCurrentUserProfile(session.user.id)
-                    console.log('[useAuth] Profile result:', userProfile)
+                    // console.log('[useAuth] Profile result:', userProfile)
                     setProfile(userProfile)
                 } catch (error) {
                     console.error('[useAuth] Error loading profile:', error)
