@@ -1,0 +1,43 @@
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import Products from "./pages/Products";
+import Utilities from "./pages/Utilities";
+import DeliveryCashSheet from "./pages/DeliveryCashSheet";
+import NotFound from "./pages/NotFound";
+import { LoginPage } from "./pages/Login";
+import { AdminDashboard } from "./pages/AdminDashboard";
+import StoreDashboard from "./pages/StoreDashboard";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<ProtectedRoute><StoreDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+            <Route path="/utilities" element={<ProtectedRoute><Utilities /></ProtectedRoute>} />
+            <Route path="/cash-register" element={<ProtectedRoute><DeliveryCashSheet /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
+
+export default App;

@@ -1,0 +1,4 @@
+-- Adicionar colunas de data na tabela de lojas
+ALTER TABLE stores 
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
