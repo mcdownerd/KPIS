@@ -161,9 +161,10 @@ export default function Products() {
       await loadProducts();
       setDialogOpen(false);
       setEditingProduct(undefined);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao salvar produto:", error);
-      toast.error(error.message || "Erro ao salvar produto.");
+      const errorMessage = error instanceof Error ? error.message : "Erro ao salvar produto."
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -180,7 +181,7 @@ export default function Products() {
       await logProductAction(id, 'EXCLUSAO', { deleted_at: new Date().toISOString() });
       setProducts(products.filter(p => p.id !== id));
       toast.success("Produto removido com sucesso!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao deletar produto:", error);
       toast.error("Erro ao remover produto.");
     }

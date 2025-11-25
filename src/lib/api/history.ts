@@ -5,7 +5,7 @@ export interface ProductHistory {
     product_id: string;
     user_id: string;
     action: 'CRIACAO' | 'EDICAO' | 'EXCLUSAO';
-    changes: any;
+    changes: Record<string, unknown>;
     created_at: string;
     user?: {
         full_name: string;
@@ -30,7 +30,7 @@ export async function getProductHistory(productId: string) {
 export async function logProductAction(
     productId: string,
     action: 'CRIACAO' | 'EDICAO' | 'EXCLUSAO',
-    changes: any
+    changes: Record<string, unknown>
 ) {
     const { data: { user } } = await supabase.auth.getUser();
 

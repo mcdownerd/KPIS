@@ -70,7 +70,7 @@ export async function getCurrentUserProfile(userId?: string) {
             setTimeout(() => reject(new Error('Query timeout')), 5000)
         )
 
-        const result = await Promise.race([queryPromise, timeoutPromise]) as any
+        const result = await Promise.race([queryPromise, timeoutPromise]) as { data: unknown; error: unknown }
         const { data, error } = result
 
         if (error) {
@@ -124,6 +124,6 @@ export async function updatePassword(newPassword: string) {
     return true
 }
 
-export function onAuthStateChange(callback: (event: string, session: any) => void) {
+export function onAuthStateChange(callback: (event: string, session: unknown) => void) {
     return supabase.auth.onAuthStateChange(callback)
 }

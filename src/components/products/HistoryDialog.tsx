@@ -86,7 +86,7 @@ export function HistoryDialog({
         return labels[key] || key;
     };
 
-    const formatValue = (key: string, value: any) => {
+    const formatValue = (key: string, value: unknown) => {
         if (!value && value !== 0) return <span className="text-muted-foreground italic">Vazio</span>;
 
         const formatDate = (dateStr: string) => {

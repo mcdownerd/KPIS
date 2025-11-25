@@ -76,7 +76,7 @@ export async function upsertDelivery(
 
     if (existing) {
         // Update
-        const updates: any = { updated_at: new Date().toISOString() }
+        const updates: Partial<Delivery> = { updated_at: new Date().toISOString() }
         updates[field] = value
 
         const { data, error } = await supabase
@@ -90,10 +90,10 @@ export async function upsertDelivery(
         return data
     } else {
         // Insert
-        const newRecord: any = {
+        const newRecord: Partial<Delivery> = {
             store_id: userProfile.store_id,
             delivery_date: date,
-            platform: platform,
+            platform: platform as Delivery['platform'],
             created_by: profile.user.id,
             order_count: 0,
             total_value: 0

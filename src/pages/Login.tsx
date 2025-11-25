@@ -37,11 +37,12 @@ export function LoginPage() {
             })
 
             navigate('/')
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Login error:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Verifique suas credenciais'
             toast({
                 title: 'Erro no login',
-                description: error.message || 'Verifique suas credenciais',
+                description: errorMessage,
                 variant: 'destructive',
             })
         } finally {
@@ -66,11 +67,12 @@ export function LoginPage() {
             setSignupEmail('')
             setSignupPassword('')
             setSignupName('')
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Signup error:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Não foi possível criar a conta'
             toast({
                 title: 'Erro no registro',
-                description: error.message || 'Não foi possível criar a conta',
+                description: errorMessage,
                 variant: 'destructive',
             })
         } finally {

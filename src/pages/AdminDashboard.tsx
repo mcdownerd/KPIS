@@ -102,7 +102,7 @@ export function AdminDashboard() {
             );
             setStores(validStores);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Erro ao carregar dados:', error);
             toast({
                 title: "Erro",
@@ -127,10 +127,11 @@ export function AdminDashboard() {
             setNewStoreLocation('');
             setIsCreateStoreOpen(false);
             fetchData();
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Erro ao criar loja."
             toast({
                 title: "Erro",
-                description: error?.message || "Erro ao criar loja.",
+                description: errorMessage,
                 variant: "destructive"
             });
         }
