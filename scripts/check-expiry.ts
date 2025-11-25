@@ -27,17 +27,19 @@ async function checkExpiryAndNotify() {
 
     console.log(`Checking products expiring before: ${format(oneDayFromNow, 'dd/MM/yyyy')}`);
 
-    // 2. Fetch active products
+    // 2. Fetch active products with DLC Primária
     const { data: products, error } = await supabase
         .from('products')
         .select(`
             id,
             name,
             expiry_date,
+            dlc_type,
             store_id,
             stores (name)
         `)
-        .not('expiry_date', 'is', null);
+        .not('expiry_date', 'is', null)
+        .eq('dlc_type', 'Primária');
 
     if (error) {
         console.error('Error fetching products:', error);
