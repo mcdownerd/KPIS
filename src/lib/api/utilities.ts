@@ -77,6 +77,36 @@ export async function getUtilitiesByMonth(month: number, year: number) {
 }
 
 /**
+ * Fetch utilities for a specific date range
+ */
+export async function getUtilitiesByDateRange(startDate: string, endDate: string) {
+    const { data: profile } = await supabase.auth.getUser()
+    if (!profile.user) throw new Error('User not authenticated')
+
+    // Get user's store_id
+    const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('store_id')
+        .eq('id', profile.user.id)
+        .single()
+
+    if (!userProfile?.store_id) {
+        return []
+    }
+
+    const { data, error } = await supabase
+        .from('utilities')
+        .select('*')
+        .eq('store_id', userProfile.store_id)
+        .gte('reading_date', startDate)
+        .lte('reading_date', endDate)
+        .order('reading_date', { ascending: true })
+
+    if (error) throw error
+    return data || []
+}
+
+/**
  * Upsert a utility reading (insert or update if exists)
  */
 export async function upsertUtilityReading(

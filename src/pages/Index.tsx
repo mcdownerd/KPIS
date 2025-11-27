@@ -13,6 +13,7 @@ import { MaintenanceDataForm } from "@/components/MaintenanceDataForm";
 import { MaintenanceDashboard } from "@/components/MaintenanceDashboard";
 import { ProductDataForm } from "@/components/ProductDataForm";
 import { ProductDashboard } from "@/components/ProductDashboard";
+import { YieldsAnalysis } from "@/components/YieldsAnalysis";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,11 +23,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ModeToggle } from "@/components/mode-toggle";
 
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
+
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useAuth();
-
+  const { metrics, loading } = useDashboardMetrics();
 
   const handleLogout = async () => {
     try {
@@ -109,7 +112,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 bg-secondary h-auto p-1">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 bg-secondary h-auto p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BarChart3 className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Visão Geral</span>
@@ -124,15 +127,8 @@ const Index = () => {
               <span className="hidden sm:inline">Operações</span>
               <span className="sm:hidden">Ops</span>
             </TabsTrigger>
-            <TabsTrigger value="costs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <DollarSign className="mr-2 h-4 w-4" />
-              Custos
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Package className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Inventário</span>
-              <span className="sm:hidden">Inv</span>
-            </TabsTrigger>
+
+
             <TabsTrigger value="product" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Box className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Produto</span>
@@ -165,31 +161,31 @@ const Index = () => {
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   title="Crescimento de Vendas"
-                  value="11.84%"
-                  change={11.84}
+                  value={loading ? "..." : `${metrics?.sales_growth.toFixed(1)}%`}
+                  change={12.5}
                   trend="up"
-                  subtitle="P.Borges vs Nacional: +2.42%"
+                  subtitle="P.Borges vs Nacional: +2.5%"
                 />
                 <MetricCard
                   title="Crescimento GC's"
-                  value="4.11%"
-                  change={4.11}
+                  value={loading ? "..." : `${metrics?.gcs_growth.toFixed(1)}%`}
+                  change={5.2}
                   trend="up"
-                  subtitle="P.Borges vs Nacional: +2.61%"
+                  subtitle="P.Borges vs Nacional: +1.2%"
                 />
                 <MetricCard
                   title="Crescimento Delivery"
-                  value="19.26%"
-                  change={19.26}
+                  value={loading ? "..." : "15.8%"}
+                  change={15.8}
                   trend="up"
                   subtitle="P.Borges YTD"
                 />
                 <MetricCard
                   title="Peso Delivery"
-                  value="52.50%"
-                  change={34.40}
+                  value={loading ? "..." : `${metrics?.delivery_growth.toFixed(1)}%`}
+                  change={2.4}
                   trend="up"
-                  subtitle="vs Nacional: +34.40%"
+                  subtitle="vs Nacional: +5.0%"
                 />
               </div>
             </section>
@@ -206,24 +202,24 @@ const Index = () => {
               <div className="grid gap-4 md:grid-cols-3">
                 <MetricCard
                   title="Tempos de Serviço"
-                  value="105s"
-                  target="95s"
-                  trend="down"
-                  change={5}
+                  value={loading ? "..." : `${metrics?.service_time_avg.toFixed(0)}s`}
+                  target="180s"
+                  trend={metrics?.service_time_avg && metrics.service_time_avg <= 180 ? "up" : "down"}
+                  change={0}
                 />
                 <MetricCard
                   title="Tempos Delivery"
-                  value="366s"
-                  target="306s"
-                  trend="down"
-                  change={42}
+                  value={loading ? "..." : `${metrics?.service_time_delivery.toFixed(0)}s`}
+                  target="180s"
+                  trend="neutral"
+                  change={0}
                 />
                 <MetricCard
                   title="Fastinsight"
-                  value="97.4%"
-                  target="94.1%"
-                  trend="up"
-                  change={2.30}
+                  value={loading ? "..." : `${metrics?.fastinsight_score.toFixed(1)}%`}
+                  target="80.0%"
+                  trend={metrics?.fastinsight_score && metrics.fastinsight_score >= 80 ? "up" : "down"}
+                  change={0}
                 />
               </div>
             </section>
@@ -231,29 +227,29 @@ const Index = () => {
             <section>
               <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-foreground">
                 <Users className="h-5 w-5 text-primary" />
-                PACE (20/32)
+                PACE (0/0)
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   title="Estrelas (Rating)"
-                  value="4.2"
+                  value={loading ? "..." : `${metrics?.rating.toFixed(1)}`}
                   target="4.5"
                   subtitle="Meta: 4.5 estrelas"
                 />
                 <MetricCard
                   title="Turnover"
-                  value="60%"
-                  trend="down"
+                  value={loading ? "..." : `${metrics?.turnover_rate.toFixed(1)}%`}
+                  trend={metrics?.turnover_rate && metrics.turnover_rate <= 10 ? "up" : "down"}
                   subtitle="Objetivo de redução"
                 />
                 <MetricCard
                   title="Staffing"
-                  value="35%"
+                  value="0%"
                   subtitle="Níveis de pessoal"
                 />
                 <MetricCard
                   title="BSV"
-                  value="100%"
+                  value="0%"
                   trend="neutral"
                   subtitle="Brand Standards Visit"
                 />
@@ -286,26 +282,9 @@ const Index = () => {
             <ServiceTimesTable />
           </TabsContent>
 
-          {/* Costs Tab */}
-          <TabsContent value="costs" className="space-y-6">
-            <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
-              <DollarSign className="h-6 w-6 text-primary" />
-              Análise de Custos
-            </h2>
-            <CostsAnalysis />
-          </TabsContent>
 
-          {/* Inventory Tab */}
-          <TabsContent value="inventory" className="space-y-6">
-            <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
-              <Package className="h-6 w-6 text-primary" />
-              Inventário e Preenchimento
-            </h2>
-            <InventoryDeviations />
-            <div className="mt-8">
-              <DataEntryForm />
-            </div>
-          </TabsContent>
+
+
 
           {/* Product Tab */}
           <TabsContent value="product" className="space-y-6">
@@ -316,13 +295,26 @@ const Index = () => {
             <Tabs defaultValue="dashboard" className="space-y-6">
               <TabsList>
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="form">Preencher Dados</TabsTrigger>
+                <TabsTrigger value="inventory">Inventário</TabsTrigger>
+                <TabsTrigger value="yields">Rendimentos</TabsTrigger>
               </TabsList>
+
               <TabsContent value="dashboard">
-                <ProductDashboard />
+                <CostsAnalysis />
               </TabsContent>
-              <TabsContent value="form">
-                <ProductDataForm />
+
+              <TabsContent value="inventory">
+                <InventoryDeviations />
+                <div className="mt-8">
+                  <DataEntryForm />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="yields">
+                <YieldsAnalysis />
+                <div className="mt-8">
+                  <DataEntryForm />
+                </div>
               </TabsContent>
             </Tabs>
           </TabsContent>

@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Save, Wrench } from "lucide-react";
+import { createMaintenance } from "@/lib/api/maintenance";
+
 
 interface UtilityData {
   aguaAmadora: string;
@@ -97,7 +99,7 @@ export const MaintenanceDataForm = () => {
       pecas: "",
       custo: ""
     };
-    
+
     if (location === "amadora") {
       setBreakdownsAmadora([...breakdownsAmadora, newBreakdown]);
     } else {
@@ -122,8 +124,31 @@ export const MaintenanceDataForm = () => {
     }
   };
 
-  const handleSave = () => {
-    toast.success(`Dados de manutenção de ${selectedMonth} salvos com sucesso!`);
+  const handleSave = async () => {
+    try {
+      // Save breakdowns for Queluz
+      for (const breakdown of breakdownsQueluz) {
+        if (breakdown.equipamento && breakdown.data) {
+          await createMaintenance({
+            breakdown_date: breakdown.data,
+            equipment_name: breakdown.equipamento,
+            cause: breakdown.causa || undefined,
+            parts_replaced: breakdown.pecas || undefined,
+            cost: breakdown.custo ? parseFloat(breakdown.custo) : 0,
+            status: 'pending'
+          });
+        }
+      }
+
+      toast.success(`Dados de manutenção de ${selectedMonth} salvos com sucesso!`);
+
+      // Clear the form
+      setBreakdownsQueluz([]);
+      setBreakdownsAmadora([]);
+    } catch (error) {
+      console.error('Error saving maintenance data:', error);
+      toast.error('Erro ao salvar dados de manutenção.');
+    }
   };
 
   const currentUtilityData: UtilityData = utilityData[selectedMonth] || {

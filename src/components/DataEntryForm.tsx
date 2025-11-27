@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Save, Calendar, Clock } from "lucide-react";
+import { createMaintenance } from "@/lib/api/maintenance";
+import { upsertInventoryDeviation, calculateDeviationStatus } from "@/lib/api/inventory";
+import { upsertYield } from "@/lib/api/yields";
 
 interface CostData {
   month: string;
@@ -60,11 +63,15 @@ const months = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 
-const stores = ["20", "32"];
+const stores = ["Amadora", "Queluz"];
 
 const serviceStores = ["Amadora", "Queluz", "P.Borges"];
 
+import { useAuth } from "@/hooks/useAuth";
+
 export function DataEntryForm() {
+  const { profile } = useAuth();
+
   const [costData, setCostData] = useState<CostData>({
     month: "",
     store: "",
@@ -112,11 +119,42 @@ export function DataEntryForm() {
     delivery: ""
   });
 
+
+
+
+
+  useEffect(() => {
+    // Get current month name
+    const currentMonthIndex = new Date().getMonth();
+    const currentMonthName = months[currentMonthIndex];
+
+    if (profile?.store_id) {
+      let storeName = "";
+      // Map IDs to names used in the form
+      if (profile.store_id === 'fcf80b5a-b658-48f3-871c-ac62120c5a78') storeName = "Queluz";
+      else if (profile.store_id === 'f86b0b1f-05d0-4310-a655-a92ca1ab68bf') storeName = "Amadora";
+
+      // Update all form states with current month and store
+      if (storeName) {
+        setCostData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+        setDeviationData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+        setYieldData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+        setServiceTimeData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+      }
+    } else {
+      // If no profile yet, just set the month
+      setCostData(prev => ({ ...prev, month: currentMonthName }));
+      setDeviationData(prev => ({ ...prev, month: currentMonthName }));
+      setYieldData(prev => ({ ...prev, month: currentMonthName }));
+      setServiceTimeData(prev => ({ ...prev, month: currentMonthName }));
+    }
+  }, [profile]);
+
   const handleCostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Cost data submitted:", costData);
     toast.success("Dados de custos salvos com sucesso!");
-    
+
     // Reset form
     setCostData({
       month: costData.month,
@@ -129,53 +167,125 @@ export function DataEntryForm() {
     });
   };
 
-  const handleDeviationSubmit = (e: React.FormEvent) => {
+  const handleDeviationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Deviation data submitted:", deviationData);
-    toast.success("Dados de desvios salvos com sucesso!");
-    
-    // Reset form
-    setDeviationData({
-      month: deviationData.month,
-      store: deviationData.store,
-      paoReg: "",
-      carneReg: "",
-      carneRoyal: "",
-      chkOpt: "",
-      chkNuggets: "",
-      baconFatias: "",
-      compal: "",
-      queijoCheddar: "",
-      queijoWhite: ""
-    });
+
+    try {
+      const year = new Date().getFullYear(); // Assuming current year
+      const monthIndex = months.indexOf(deviationData.month);
+      // Create a date for the 1st of the selected month
+      // Note: monthIndex is 0-based (0 = January)
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      const products = [
+        { key: 'paoReg', name: 'PÃO REG' },
+        { key: 'carneReg', name: 'CARNE REG' },
+        { key: 'carneRoyal', name: 'CARNE ROYAL' },
+        { key: 'chkOpt', name: 'CHK OPT' },
+        { key: 'chkNuggets', name: 'CHK NUGGETS' },
+        { key: 'baconFatias', name: 'BACON FATIAS' },
+        { key: 'compal', name: 'COMPAL' },
+        { key: 'queijoCheddar', name: 'QUEIJO CHEDDAR' },
+        { key: 'queijoWhite', name: 'QUEIJO WHITE' }
+      ];
+
+      for (const product of products) {
+        const valueStr = deviationData[product.key as keyof DeviationData];
+        if (valueStr && valueStr !== "") {
+          const value = parseFloat(valueStr as string);
+          await upsertInventoryDeviation({
+            record_date: recordDate,
+            item_name: product.name,
+            deviation_value: value,
+            status: calculateDeviationStatus(value)
+          });
+        }
+      }
+
+      toast.success("Dados de desvios salvos com sucesso!");
+
+      // Dispatch custom event to refresh the inventory deviations dashboard
+      window.dispatchEvent(new CustomEvent('inventory-deviations-updated'));
+
+      // Reset form
+      setDeviationData({
+        month: deviationData.month,
+        store: deviationData.store,
+        paoReg: "",
+        carneReg: "",
+        carneRoyal: "",
+        chkOpt: "",
+        chkNuggets: "",
+        baconFatias: "",
+        compal: "",
+        queijoCheddar: "",
+        queijoWhite: ""
+      });
+    } catch (error) {
+      console.error("Error saving deviation data:", error);
+      toast.error("Erro ao salvar dados de desvios.");
+    }
   };
 
-  const handleYieldSubmit = (e: React.FormEvent) => {
+  const handleYieldSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Yield data submitted:", yieldData);
-    toast.success("Dados de rendimentos salvos com sucesso!");
-    
-    // Reset form
-    setYieldData({
-      month: yieldData.month,
-      store: yieldData.store,
-      batata: "",
-      alfaceL6: "",
-      sopas: "",
-      cobChocolate: "",
-      cobCaramelo: "",
-      cobMorango: "",
-      cobSnickers: "",
-      cobMars: "",
-      leiteSundae: ""
-    });
+
+    try {
+      const monthIndex = months.indexOf(yieldData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex + 1, 0).toISOString().split('T')[0];
+
+      const items = [
+        { key: 'batata', name: 'Batata' },
+        { key: 'alfaceL6', name: 'Alface L6' },
+        { key: 'sopas', name: 'Sopas' },
+        { key: 'cobChocolate', name: 'Cob Chocolate' },
+        { key: 'cobCaramelo', name: 'Cob Caramelo' },
+        { key: 'cobMorango', name: 'Cob Morango' },
+        { key: 'cobSnickers', name: 'Cob Snickers' },
+        { key: 'cobMars', name: 'Cob Mars' },
+        { key: 'leiteSundae', name: 'Leite Sundae' },
+      ];
+
+      for (const item of items) {
+        const value = yieldData[item.key as keyof typeof yieldData];
+        if (value) {
+          await upsertYield({
+            record_date: recordDate,
+            product_name: item.name,
+            yield_value: parseFloat(value.toString())
+          });
+        }
+      }
+
+      toast.success("Dados de rendimentos salvos com sucesso!");
+      window.dispatchEvent(new CustomEvent('yields-updated'));
+
+      // Reset form
+      setYieldData({
+        month: yieldData.month,
+        store: yieldData.store,
+        batata: "",
+        alfaceL6: "",
+        sopas: "",
+        cobChocolate: "",
+        cobCaramelo: "",
+        cobMorango: "",
+        cobSnickers: "",
+        cobMars: "",
+        leiteSundae: ""
+      });
+    } catch (error) {
+      console.error("Error saving yield data:", error);
+      toast.error("Erro ao salvar dados de rendimentos.");
+    }
   };
 
   const handleServiceTimeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Service time data submitted:", serviceTimeData);
     toast.success("Dados de tempos de serviço salvos com sucesso!");
-    
+
     // Reset form
     setServiceTimeData({
       month: serviceTimeData.month,
@@ -190,7 +300,7 @@ export function DataEntryForm() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="costs" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-secondary">
+        <TabsList className="h-auto flex flex-col sm:grid w-full sm:grid-cols-3 bg-secondary p-1">
           <TabsTrigger value="costs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             Custo de Vendas
           </TabsTrigger>
@@ -199,9 +309,6 @@ export function DataEntryForm() {
           </TabsTrigger>
           <TabsTrigger value="yields" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             Rendimentos
-          </TabsTrigger>
-          <TabsTrigger value="servicetimes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            Tempos de Serviço
           </TabsTrigger>
         </TabsList>
 
@@ -245,6 +352,7 @@ export function DataEntryForm() {
                       value={costData.store}
                       onValueChange={(value) => setCostData({ ...costData, store: value })}
                       required
+                      disabled={!!profile?.store_id}
                     >
                       <SelectTrigger id="cost-store">
                         <SelectValue placeholder="Selecione a loja" />
@@ -376,6 +484,7 @@ export function DataEntryForm() {
                       value={deviationData.store}
                       onValueChange={(value) => setDeviationData({ ...deviationData, store: value })}
                       required
+                      disabled={!!profile?.store_id}
                     >
                       <SelectTrigger id="dev-store">
                         <SelectValue placeholder="Selecione a loja" />
@@ -383,7 +492,7 @@ export function DataEntryForm() {
                       <SelectContent>
                         {stores.map((store) => (
                           <SelectItem key={store} value={store}>
-                            Loja {store}
+                            {store}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -393,7 +502,7 @@ export function DataEntryForm() {
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="paoReg">Pão Regular</Label>
+                    <Label htmlFor="paoReg">PÃO REG</Label>
                     <Input
                       id="paoReg"
                       type="number"
@@ -401,12 +510,11 @@ export function DataEntryForm() {
                       placeholder="-114"
                       value={deviationData.paoReg}
                       onChange={(e) => setDeviationData({ ...deviationData, paoReg: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="carneReg">Carne Regular</Label>
+                    <Label htmlFor="carneReg">CARNE REG</Label>
                     <Input
                       id="carneReg"
                       type="number"
@@ -414,12 +522,11 @@ export function DataEntryForm() {
                       placeholder="-29"
                       value={deviationData.carneReg}
                       onChange={(e) => setDeviationData({ ...deviationData, carneReg: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="carneRoyal">Carne Royal</Label>
+                    <Label htmlFor="carneRoyal">CARNE ROYAL</Label>
                     <Input
                       id="carneRoyal"
                       type="number"
@@ -427,12 +534,11 @@ export function DataEntryForm() {
                       placeholder="-105"
                       value={deviationData.carneRoyal}
                       onChange={(e) => setDeviationData({ ...deviationData, carneRoyal: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="chkOpt">Chicken Optimum</Label>
+                    <Label htmlFor="chkOpt">CHK OPT</Label>
                     <Input
                       id="chkOpt"
                       type="number"
@@ -440,12 +546,11 @@ export function DataEntryForm() {
                       placeholder="-43"
                       value={deviationData.chkOpt}
                       onChange={(e) => setDeviationData({ ...deviationData, chkOpt: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="chkNuggets">Chicken Nuggets</Label>
+                    <Label htmlFor="chkNuggets">CHK NUGGETS</Label>
                     <Input
                       id="chkNuggets"
                       type="number"
@@ -453,12 +558,11 @@ export function DataEntryForm() {
                       placeholder="-299"
                       value={deviationData.chkNuggets}
                       onChange={(e) => setDeviationData({ ...deviationData, chkNuggets: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="baconFatias">Bacon Fatias</Label>
+                    <Label htmlFor="baconFatias">BACON FATIAS</Label>
                     <Input
                       id="baconFatias"
                       type="number"
@@ -466,12 +570,11 @@ export function DataEntryForm() {
                       placeholder="617"
                       value={deviationData.baconFatias}
                       onChange={(e) => setDeviationData({ ...deviationData, baconFatias: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="compal">Compal</Label>
+                    <Label htmlFor="compal">COMPAL</Label>
                     <Input
                       id="compal"
                       type="number"
@@ -479,12 +582,11 @@ export function DataEntryForm() {
                       placeholder="-20"
                       value={deviationData.compal}
                       onChange={(e) => setDeviationData({ ...deviationData, compal: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="queijoCheddar">Queijo Cheddar</Label>
+                    <Label htmlFor="queijoCheddar">QUEIJO CHEDDAR</Label>
                     <Input
                       id="queijoCheddar"
                       type="number"
@@ -492,12 +594,11 @@ export function DataEntryForm() {
                       placeholder="82"
                       value={deviationData.queijoCheddar}
                       onChange={(e) => setDeviationData({ ...deviationData, queijoCheddar: e.target.value })}
-                      required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="queijoWhite">Queijo White</Label>
+                    <Label htmlFor="queijoWhite">QUEIJO WHITE</Label>
                     <Input
                       id="queijoWhite"
                       type="number"
@@ -505,7 +606,6 @@ export function DataEntryForm() {
                       placeholder="-21"
                       value={deviationData.queijoWhite}
                       onChange={(e) => setDeviationData({ ...deviationData, queijoWhite: e.target.value })}
-                      required
                     />
                   </div>
                 </div>
@@ -559,6 +659,7 @@ export function DataEntryForm() {
                       value={yieldData.store}
                       onValueChange={(value) => setYieldData({ ...yieldData, store: value })}
                       required
+                      disabled={!!profile?.store_id}
                     >
                       <SelectTrigger id="yield-store">
                         <SelectValue placeholder="Selecione a loja" />
@@ -566,7 +667,7 @@ export function DataEntryForm() {
                       <SelectContent>
                         {stores.map((store) => (
                           <SelectItem key={store} value={store}>
-                            Loja {store}
+                            {store}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -696,124 +797,6 @@ export function DataEntryForm() {
                 <Button type="submit" className="w-full md:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   Salvar Dados de Rendimentos
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="servicetimes" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Preenchimento de Tempos de Serviço
-              </CardTitle>
-              <CardDescription>
-                Insira os tempos de serviço mensais por tipo (em segundos)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleServiceTimeSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="service-month">Mês</Label>
-                    <Select
-                      value={serviceTimeData.month}
-                      onValueChange={(value) => setServiceTimeData({ ...serviceTimeData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="service-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="service-store">Loja</Label>
-                    <Select
-                      value={serviceTimeData.store}
-                      onValueChange={(value) => setServiceTimeData({ ...serviceTimeData, store: value })}
-                      required
-                    >
-                      <SelectTrigger id="service-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {serviceStores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="almoco">Almoço (seg)</Label>
-                    <Input
-                      id="almoco"
-                      type="number"
-                      step="1"
-                      placeholder="108"
-                      value={serviceTimeData.almoco}
-                      onChange={(e) => setServiceTimeData({ ...serviceTimeData, almoco: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="jantar">Jantar (seg)</Label>
-                    <Input
-                      id="jantar"
-                      type="number"
-                      step="1"
-                      placeholder="122"
-                      value={serviceTimeData.jantar}
-                      onChange={(e) => setServiceTimeData({ ...serviceTimeData, jantar: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="dia">Dia (seg)</Label>
-                    <Input
-                      id="dia"
-                      type="number"
-                      step="1"
-                      placeholder="132"
-                      value={serviceTimeData.dia}
-                      onChange={(e) => setServiceTimeData({ ...serviceTimeData, dia: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery">Delivery (seg)</Label>
-                    <Input
-                      id="delivery"
-                      type="number"
-                      step="1"
-                      placeholder="81"
-                      value={serviceTimeData.delivery}
-                      onChange={(e) => setServiceTimeData({ ...serviceTimeData, delivery: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Dados de Tempos de Serviço
                 </Button>
               </form>
             </CardContent>

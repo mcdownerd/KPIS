@@ -167,112 +167,121 @@ const DeliveryCashSheet = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <header className="space-y-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Link to="/">
-                <Button variant="ghost" size="sm" className="pl-0 hover:pl-2 transition-all">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Voltar ao Dashboard
-                </Button>
-              </Link>
-            </div>
-            <h1 className="text-4xl font-bold text-foreground">Folha de Caixa Delivery</h1>
-            <p className="text-muted-foreground mt-2">Controle diário de operações de caixa</p>
-          </div>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Gradients for Glassmorphism Context */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[100px]" />
+        <div className="absolute top-[20%] right-[20%] w-[20%] h-[20%] rounded-full bg-purple-600/10 blur-[100px]" />
+      </div>
 
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            <div className="w-full md:flex-1 md:max-w-xs">
-              <label className="text-sm font-medium mb-2 block">Mês</label>
-              <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((month, index) => (
-                    <SelectItem key={index} value={index.toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      <div className="p-6 relative z-10">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <header className="space-y-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Link to="/">
+                  <Button variant="ghost" size="sm" className="pl-0 hover:pl-2 transition-all">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar ao Dashboard
+                  </Button>
+                </Link>
+              </div>
+              <h1 className="text-4xl font-bold text-foreground">Folha de Caixa Delivery</h1>
+              <p className="text-muted-foreground mt-2">Controle diário de operações de caixa</p>
             </div>
 
-            <div className="w-full md:flex-1 md:max-w-xs">
-              <label className="text-sm font-medium mb-2 block">Ano</label>
-              <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i).map(year => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+              <div className="w-full md:flex-1 md:max-w-xs">
+                <label className="text-sm font-medium mb-2 block">Mês</label>
+                <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((month, index) => (
+                      <SelectItem key={index} value={index.toString()}>
+                        {month}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-full md:flex-1 md:max-w-xs">
+                <label className="text-sm font-medium mb-2 block">Ano</label>
+                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i).map(year => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <Card className="p-4 md:p-6">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <Tabs defaultValue="daily" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
-                <TabsTrigger value="daily">Entrada Diária</TabsTrigger>
-                <TabsTrigger value="operator">Análise Operador</TabsTrigger>
-                <TabsTrigger value="restaurant">Média Restaurante</TabsTrigger>
-                <TabsTrigger value="comparison">Comparação Meses</TabsTrigger>
-              </TabsList>
+          <Card className="p-4 md:p-6">
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <Tabs defaultValue="daily" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+                  <TabsTrigger value="daily">Entrada Diária</TabsTrigger>
+                  <TabsTrigger value="operator">Análise Operador</TabsTrigger>
+                  <TabsTrigger value="restaurant">Média Restaurante</TabsTrigger>
+                  <TabsTrigger value="comparison">Comparação Meses</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="daily" className="space-y-4">
-                <div className="flex gap-2 flex-wrap">
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                    <button
-                      key={day}
-                      onClick={() => setSelectedDay(day)}
-                      className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${selectedDay === day
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted hover:bg-muted/80"
-                        }`}
-                    >
-                      Dia {day}
-                    </button>
-                  ))}
-                </div>
+                <TabsContent value="daily" className="space-y-4">
+                  <div className="flex gap-2 flex-wrap">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                      <button
+                        key={day}
+                        onClick={() => setSelectedDay(day)}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${selectedDay === day
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted hover:bg-muted/80"
+                          }`}
+                      >
+                        Dia {day}
+                      </button>
+                    ))}
+                  </div>
 
-                <DeliveryDayForm
-                  day={selectedDay}
-                  initialData={getCurrentDayData()}
-                  onSave={handleSaveDay}
-                />
-              </TabsContent>
+                  <DeliveryDayForm
+                    day={selectedDay}
+                    initialData={getCurrentDayData()}
+                    onSave={handleSaveDay}
+                  />
+                </TabsContent>
 
-              <TabsContent value="operator" className="space-y-4">
-                <OperatorAnalysis deliveryData={monthData} />
-              </TabsContent>
+                <TabsContent value="operator" className="space-y-4">
+                  <OperatorAnalysis deliveryData={monthData} />
+                </TabsContent>
 
-              <TabsContent value="restaurant" className="space-y-4">
-                <RestaurantAverage deliveryData={monthData} />
-              </TabsContent>
+                <TabsContent value="restaurant" className="space-y-4">
+                  <RestaurantAverage deliveryData={monthData} />
+                </TabsContent>
 
-              <TabsContent value="comparison" className="space-y-4">
-                {/* TODO: Implementar comparação real com dados do banco */}
-                <div className="p-4 text-center text-muted-foreground">
-                  Comparação de meses em desenvolvimento...
-                </div>
-                {/* <MonthComparison allMonthsData={{}} months={MONTHS} /> */}
-              </TabsContent>
-            </Tabs>
-          )}
-        </Card>
+                <TabsContent value="comparison" className="space-y-4">
+                  {/* TODO: Implementar comparação real com dados do banco */}
+                  <div className="p-4 text-center text-muted-foreground">
+                    Comparação de meses em desenvolvimento...
+                  </div>
+                  {/* <MonthComparison allMonthsData={{}} months={MONTHS} /> */}
+                </TabsContent>
+              </Tabs>
+            )}
+          </Card>
+        </div>
       </div>
     </div>
   );

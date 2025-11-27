@@ -1,307 +1,213 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MetricCard } from "@/components/MetricCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, Users, Clock } from "lucide-react";
-import { MetricCard } from "./MetricCard";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, ComposedChart } from "recharts";
+import { useHRData } from "@/hooks/useHRData";
+import { Loader2 } from "lucide-react";
 
-const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+export function PeopleDashboard() {
+  const { laborData, turnoverData, staffingData, performanceData, loading } = useHRData();
 
-// Dados exemplo da planilha
-const laborData = {
-  amadora: {
-    jan: { vendas: "286,344.11", horas: 4121, prod: "69.48", mo: "11.05%" },
-    fev: { vendas: "251,555.16", horas: 3379, prod: "74.45", mo: "10.16%" },
-    mar: { vendas: "149,918.40", horas: 2001, prod: "74.92", mo: "10.37%" },
-  },
-  queluz: {
-    jan: { vendas: "155,938.56", horas: 2425.12, prod: "64.30", mo: "12.16%" },
-    fev: { vendas: "141,659.14", horas: 2234, prod: "63.40", mo: "12.15%" },
-    mar: { vendas: "153,268.00", horas: 1887.37, prod: "81.21", mo: "13.14%" },
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
-};
 
-const turnoverData = [
-  { mes: "JANEIRO", amadora: "0%", queluz: "0%", status: "OK" },
-  { mes: "FEVEREIRO", amadora: "0%", queluz: "0%", status: "OK" },
-  { mes: "MARÇO", amadora: "0%", queluz: "0%", status: "OK" },
-  { mes: "AGOSTO", amadora: "3%", queluz: "15%", status: "OK" },
-];
+  // Get latest values for summary cards
+  const latestLabor = laborData[laborData.length - 1] || { mo: 0, prod: 0 };
+  const latestTurnover = turnoverData[turnoverData.length - 1] || { value: 0 };
+  const latestStaffing = staffingData[staffingData.length - 1] || { value: 0 };
+  const latestPerformance = performanceData[performanceData.length - 1] || { value: 0 };
 
-const staffingData = [
-  { mes: "JANEIRO", amadoraTotal: "40%", amadoraAlmoco: "23%", amadoraJantar: "58%", queluzTotal: "52%", queluzAlmoco: "45%", queluzJantar: "58%" },
-  { mes: "FEVEREIRO", amadoraTotal: "34%", amadoraAlmoco: "31%", amadoraJantar: "38%", queluzTotal: "58%", queluzAlmoco: "46%", queluzJantar: "71%" },
-  { mes: "MARÇO", amadoraTotal: "31%", amadoraAlmoco: "25%", amadoraJantar: "38%", queluzTotal: "46%", queluzAlmoco: "48%", queluzJantar: "44%" },
-];
-
-const performanceData = [
-  { mes: "JAN", mo: "NOK", prod: "OK", turnover: "OK", staffing: "OK", total: 3, taxa: "33%" },
-  { mes: "FEV", mo: "NOK", prod: "OK", turnover: "OK", staffing: "NOK", total: 2, taxa: "22%" },
-  { mes: "MAR", mo: "NOK", prod: "OK", turnover: "OK", staffing: "NOK", total: 2, taxa: "22%" },
-  { mes: "ABR", mo: "NOK", prod: "OK", turnover: "OK", staffing: "OK", total: 3, taxa: "33%" },
-];
-
-export const PeopleDashboard = () => {
   return (
     <div className="space-y-6">
-      {/* KPIs Principais */}
-      <section>
-        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-foreground">
-          <Users className="h-5 w-5 text-primary" />
-          Indicadores de Pessoas - Resumo
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            title="Turnover Médio Anual"
-            value="9%"
-            target="85%"
-            trend="up"
-            subtitle="Objetivo: 85%"
-          />
-          <MetricCard
-            title="Staffing Médio"
-            value="40%"
-            target="35%"
-            trend="down"
-            subtitle="Abaixo do ideal: 35%"
-          />
-          <MetricCard
-            title="Horas Extra (Média)"
-            value="6.7h"
-            subtitle="Amadora mensal"
-          />
-          <MetricCard
-            title="Taxa Concretização"
-            value="30%"
-            subtitle="Média anual 20/32"
-          />
-        </div>
-      </section>
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Custo Mão de Obra"
+          value={`€${latestLabor.mo.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+          target="€30,000"
+          trend={latestLabor.mo <= 30000 ? "up" : "down"}
+          subtitle="Último mês"
+        />
+        <MetricCard
+          title="Turnover"
+          value={`${latestTurnover.value.toFixed(1)}%`}
+          target="2.0%"
+          trend={latestTurnover.value <= 2 ? "up" : "down"}
+          subtitle="Último mês"
+        />
+        <MetricCard
+          title="Staffing"
+          value={`${latestStaffing.value.toFixed(0)}h`}
+          target="1,800h"
+          trend={latestStaffing.value <= 1800 ? "up" : "down"}
+          subtitle="Horas mensais"
+        />
+        <MetricCard
+          title="Produtividade"
+          value={`${latestPerformance.value.toFixed(1)}%`}
+          target="100.0%"
+          trend={latestPerformance.value >= 100 ? "up" : "down"}
+          subtitle="Último mês"
+        />
+      </div>
 
-      {/* Comparação M.O. Mensal */}
-      <section>
-        <Card>
+      {/* Labor Cost Analysis */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              M.O. Mensal - Comparação de Custos
-            </CardTitle>
-            <CardDescription>Vendas, Horas e Produtividade por Localização</CardDescription>
+            <CardTitle>Evolução Custo Mão de Obra</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Amadora (20)</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>Vendas</TableHead>
-                      <TableHead>Horas</TableHead>
-                      <TableHead>Prod.</TableHead>
-                      <TableHead>M.O.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(laborData.amadora).map(([key, data]) => (
-                      <TableRow key={key}>
-                        <TableCell className="font-medium">{key.toUpperCase()}</TableCell>
-                        <TableCell>{data.vendas} €</TableCell>
-                        <TableCell>{data.horas}</TableCell>
-                        <TableCell>{data.prod} €</TableCell>
-                        <TableCell>
-                          <Badge variant={parseFloat(data.mo) > 11 ? "destructive" : "default"}>
-                            {data.mo}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Queluz (32)</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>Vendas</TableHead>
-                      <TableHead>Horas</TableHead>
-                      <TableHead>Prod.</TableHead>
-                      <TableHead>M.O.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(laborData.queluz).map(([key, data]) => (
-                      <TableRow key={key}>
-                        <TableCell className="font-medium">{key.toUpperCase()}</TableCell>
-                        <TableCell>{data.vendas} €</TableCell>
-                        <TableCell>{data.horas}</TableCell>
-                        <TableCell>{data.prod} €</TableCell>
-                        <TableCell>
-                          <Badge variant={parseFloat(data.mo) > 11 ? "destructive" : "default"}>
-                            {data.mo}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={laborData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis yAxisId="left" className="text-xs" />
+                <YAxis yAxisId="right" orientation="right" className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                  }}
+                />
+                <Legend />
+                <Bar yAxisId="left" dataKey="vendas" name="Vendas (€)" fill="#8884d8" barSize={20} />
+                <Line yAxisId="right" type="monotone" dataKey="mo" name="MO %" stroke="#ff7300" strokeWidth={2} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
-      </section>
 
-      {/* Turnover */}
-      <section>
-        <Card>
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Turnover
-            </CardTitle>
-            <CardDescription>Taxa de rotatividade de funcionários - Objetivo: 85%</CardDescription>
+            <CardTitle>Produtividade (Vendas/Hora)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={laborData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" domain={[30, 60]} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="prod" name="Produtividade" stroke="#82ca9d" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Turnover & Staffing */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle>Evolução Turnover</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={turnoverData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="value" name="Turnover %" stroke="#ff0000" strokeWidth={2} />
+                <Line type="monotone" dataKey="target" name="Meta" stroke="#82ca9d" strokeDasharray="5 5" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle>Evolução Staffing</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={staffingData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" domain={[50, 110]} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="value" name="Staffing %" stroke="#8884d8" strokeWidth={2} />
+                <Line type="monotone" dataKey="target" name="Meta" stroke="#82ca9d" strokeDasharray="5 5" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Table */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle>Detalhe Mensal de Mão de Obra</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Mês</TableHead>
+                <TableHead className="text-right">Vendas</TableHead>
+                <TableHead className="text-right">Horas</TableHead>
+                <TableHead className="text-right">Produtividade</TableHead>
+                <TableHead className="text-right">MO %</TableHead>
+                <TableHead className="text-right">Turnover</TableHead>
+                <TableHead className="text-right">Staffing</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {laborData.map((item, index) => {
+                const turnover = turnoverData[index]?.value || 0;
+                const staffing = staffingData[index]?.value || 0;
+
+                return (
+                  <TableRow key={item.month}>
+                    <TableCell className="font-medium">{item.month}</TableCell>
+                    <TableCell className="text-right">€{item.vendas.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{item.horas}</TableCell>
+                    <TableCell className="text-right">€{item.prod.toFixed(1)}</TableCell>
+                    <TableCell className="text-right">{item.mo.toFixed(1)}%</TableCell>
+                    <TableCell className="text-right">{turnover.toFixed(1)}%</TableCell>
+                    <TableCell className="text-right">{staffing.toFixed(0)}%</TableCell>
+                  </TableRow>
+                );
+              })}
+              {laborData.length === 0 && (
                 <TableRow>
-                  <TableHead>Mês</TableHead>
-                  <TableHead>Amadora</TableHead>
-                  <TableHead>Queluz</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                    Nenhum dado de RH disponível.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {turnoverData.map((row) => (
-                  <TableRow key={row.mes}>
-                    <TableCell className="font-medium">{row.mes}</TableCell>
-                    <TableCell>{row.amadora}</TableCell>
-                    <TableCell>{row.queluz}</TableCell>
-                    <TableCell>
-                      <Badge variant="default">{row.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Staffing */}
-      <section>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Staffing (abaixo do ideal)
-            </CardTitle>
-            <CardDescription>Níveis de pessoal por turno - Objetivo: 35%</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead rowSpan={2}>Mês</TableHead>
-                    <TableHead colSpan={3} className="text-center border-r">Amadora (20)</TableHead>
-                    <TableHead colSpan={3} className="text-center">Queluz (32)</TableHead>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Almoço</TableHead>
-                    <TableHead className="border-r">Jantar</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Almoço</TableHead>
-                    <TableHead>Jantar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {staffingData.map((row) => (
-                    <TableRow key={row.mes}>
-                      <TableCell className="font-medium">{row.mes}</TableCell>
-                      <TableCell>
-                        <Badge variant={parseFloat(row.amadoraTotal) > 35 ? "destructive" : "default"}>
-                          {row.amadoraTotal}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{row.amadoraAlmoco}</TableCell>
-                      <TableCell className="border-r">{row.amadoraJantar}</TableCell>
-                      <TableCell>
-                        <Badge variant={parseFloat(row.queluzTotal) > 35 ? "destructive" : "default"}>
-                          {row.queluzTotal}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{row.queluzAlmoco}</TableCell>
-                      <TableCell>{row.queluzJantar}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Performance 20/32 */}
-      <section>
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance 20/32 - Tracking Mensal</CardTitle>
-            <CardDescription>Indicadores de cumprimento de metas (OK/NOK)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mês</TableHead>
-                  <TableHead>M.O.</TableHead>
-                  <TableHead>Produtividade</TableHead>
-                  <TableHead>Turnover</TableHead>
-                  <TableHead>Staffing</TableHead>
-                  <TableHead>Total OK</TableHead>
-                  <TableHead>Taxa Concretização</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {performanceData.map((row) => (
-                  <TableRow key={row.mes}>
-                    <TableCell className="font-medium">{row.mes}</TableCell>
-                    <TableCell>
-                      <Badge variant={row.mo === "OK" ? "default" : "destructive"}>
-                        {row.mo}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={row.prod === "OK" ? "default" : "destructive"}>
-                        {row.prod}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={row.turnover === "OK" ? "default" : "destructive"}>
-                        {row.turnover}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={row.staffing === "OK" ? "default" : "destructive"}>
-                        {row.staffing}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-semibold">{row.total}/4</TableCell>
-                    <TableCell>
-                      <Badge variant={parseFloat(row.taxa) >= 50 ? "default" : "secondary"}>
-                        {row.taxa}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </section>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}

@@ -80,7 +80,20 @@ export async function upsertCashRegisterShift(shift: Omit<CashRegisterShift, 'id
         const { data, error } = await supabase
             .from('cash_register_shifts')
             .update({
-                ...shift,
+                shift_date: shift.shift_date,
+                shift_type: shift.shift_type,
+                operator_name: shift.operator_name,
+                gcs: shift.gcs,
+                sales: shift.sales,
+                cash: shift.cash,
+                mb: shift.mb,
+                mbp: shift.mbp,
+                tr_euro: shift.tr_euro,
+                difference: shift.difference,
+                reimbursement_qty: shift.reimbursement_qty,
+                reimbursement_value: shift.reimbursement_value,
+                reimbursement_note: shift.reimbursement_note,
+                manager_name: shift.manager_name,
                 updated_at: new Date().toISOString()
             })
             .eq('id', shift.id)
@@ -90,9 +103,27 @@ export async function upsertCashRegisterShift(shift: Omit<CashRegisterShift, 'id
         if (error) throw error
         return data
     } else {
+        // For INSERT, don't include id field - let database generate it
         const { data, error } = await supabase
             .from('cash_register_shifts')
-            .insert([shiftData])
+            .insert([{
+                shift_date: shiftData.shift_date,
+                shift_type: shiftData.shift_type,
+                operator_name: shiftData.operator_name,
+                gcs: shiftData.gcs,
+                sales: shiftData.sales,
+                cash: shiftData.cash,
+                mb: shiftData.mb,
+                mbp: shiftData.mbp,
+                tr_euro: shiftData.tr_euro,
+                difference: shiftData.difference,
+                reimbursement_qty: shiftData.reimbursement_qty,
+                reimbursement_value: shiftData.reimbursement_value,
+                reimbursement_note: shiftData.reimbursement_note,
+                manager_name: shiftData.manager_name,
+                store_id: shiftData.store_id,
+                created_by: shiftData.created_by
+            }])
             .select()
             .single()
 

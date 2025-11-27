@@ -1,63 +1,76 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, Zap, Droplet, AlertTriangle, TrendingUp } from "lucide-react";
+import { Wrench, Zap, Droplet, AlertTriangle, TrendingUp, Loader2 } from "lucide-react";
 import { MetricCard } from "./MetricCard";
-
-// Dados exemplo da planilha
-const utilityData = [
-  { mes: "JAN", aguaAmd: "436.14", eletAmd: "4,369.51", aguaQlz: "386.58", eletQlz: "3,233.03" },
-  { mes: "FEV", aguaAmd: "435.07", eletAmd: "3,762.71", aguaQlz: "346.33", eletQlz: "2,882.92" },
-  { mes: "MAR", aguaAmd: "393.20", eletAmd: "-", aguaQlz: "393.20", eletQlz: "3,139.06" },
-];
-
-const breakdownsAmadora = [
-  { equip: "Sonda 4:1", causa: "Teve de ser uma nova, a outra desapareceu", data: "01/02/25", pecas: "-", custo: "372.20€" },
-  { equip: "Ecrã uber", causa: "Já tinha +7 anos", data: "01/02/25", pecas: "-", custo: "99.90€" },
-  { equip: "Peças", causa: "Reparações pequenas na loja", data: "01/03/25", pecas: "-", custo: "5.50€" },
-  { equip: "Borrachas", causa: "Borrachas arcas", data: "01/03/25", pecas: "-", custo: "74.71€" },
-  { equip: "Sonda sopa", causa: "Reparação", data: "28/01/25", pecas: "sonda", custo: "449.57€" },
-];
-
-const breakdownsQueluz = [
-  { equip: "Sonda sopa 1", causa: "Não comunica", data: "-", pecas: "-", custo: "-" },
-  { equip: "Máquina de gelados", causa: "Bomba de leite e placa central", data: "17/04/25", pecas: "-", custo: "Sob Orçamento" },
-  { equip: "Máquina Take Away", causa: "-", data: "30/04/25", pecas: "Bomba de leite", custo: "2,900.00€" },
-  { equip: "Compressor arca BOP Negativa", causa: "-", data: "15/07/25", pecas: "compressor", custo: "791.94€" },
-  { equip: "Motor placa Grelhador 2", causa: "-", data: "09/07/25", pecas: "motor", custo: "707.95€" },
-];
-
-const performanceData = [
-  { mes: "JAN", cmpAmd: "-", plAmd: "-", avalAmd: "-", cmpQlz: "96.63%", plQlz: "100.00%", avalQlz: "-" },
-  { mes: "FEV", cmpAmd: "-", plAmd: "-", avalAmd: "-", cmpQlz: "97.21%", plQlz: "100.00%", avalQlz: "-" },
-  { mes: "MAR", cmpAmd: "-", plAmd: "-", avalAmd: "-", cmpQlz: "99.26%", plQlz: "100.00%", avalQlz: "-" },
-  { mes: "ABR", cmpAmd: "-", plAmd: "-", avalAmd: "-", cmpQlz: "99.73%", plQlz: "100.00%", avalQlz: "-" },
-];
-
-const performanceTracking = [
-  { mes: "JAN", gastosGerais: "NOK", cmp: "NOK", pl: "NOK", aval: "NOK", total: 3, taxa: "33%" },
-  { mes: "FEV", gastosGerais: "NOK", cmp: "NOK", pl: "NOK", aval: "NOK", total: 2, taxa: "22%" },
-  { mes: "MAR", gastosGerais: "NOK", cmp: "NOK", pl: "NOK", aval: "NOK", total: 2, taxa: "22%" },
-  { mes: "ABR", gastosGerais: "NOK", cmp: "NOK", pl: "NOK", aval: "NOK", total: 2, taxa: "22%" },
-];
-
-const performanceTrackingQueluz = [
-  { mes: "JAN", gastosGerais: "NOK", cmp: "OK", pl: "OK", aval: "NOK", total: 4, taxa: "44%" },
-  { mes: "FEV", gastosGerais: "NOK", cmp: "OK", pl: "OK", aval: "NOK", total: 5, taxa: "56%" },
-  { mes: "MAR", gastosGerais: "NOK", cmp: "OK", pl: "OK", aval: "NOK", total: 4, taxa: "44%" },
-  { mes: "ABR", gastosGerais: "NOK", cmp: "OK", pl: "OK", aval: "NOK", total: 4, taxa: "44%" },
-];
+import { useMaintenanceData, Breakdown } from "@/hooks/useMaintenanceData";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { updateMaintenance } from "@/lib/api/maintenance";
+import { toast } from "sonner";
 
 export const MaintenanceDashboard = () => {
-  const totalCostAmadora = breakdownsAmadora.reduce((acc, b) => {
-    const cost = parseFloat(b.custo.replace(/[^0-9.]/g, ""));
-    return acc + (isNaN(cost) ? 0 : cost);
-  }, 0);
+  const { breakdowns, utilityData, performanceData, summary, loading, refetch } = useMaintenanceData();
+  const [selectedBreakdown, setSelectedBreakdown] = useState<Breakdown | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const totalCostQueluz = breakdownsQueluz.reduce((acc, b) => {
-    const cost = parseFloat(b.custo.replace(/[^0-9.]/g, ""));
-    return acc + (isNaN(cost) ? 0 : cost);
-  }, 0);
+  const handleCardClick = (breakdown: Breakdown) => {
+    setSelectedBreakdown(breakdown);
+    setNewStatus(breakdown.status);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveStatus = async () => {
+    if (!selectedBreakdown) return;
+
+    try {
+      setIsUpdating(true);
+
+      // Map UI status to API status
+      const apiStatus = newStatus === 'Pendente' ? 'pending' :
+        newStatus === 'Em Resolução' ? 'in_progress' : 'completed';
+
+      await updateMaintenance(selectedBreakdown.id, { status: apiStatus });
+
+      toast.success("Status atualizado com sucesso!");
+      setIsDialogOpen(false);
+      refetch(); // Refresh data
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      toast.error("Erro ao atualizar status.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Filter breakdowns for Queluz (assuming current user is Queluz)
+  const breakdownsQueluz = breakdowns;
 
   return (
     <div className="space-y-6">
@@ -70,25 +83,25 @@ export const MaintenanceDashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Custos Avarias Amadora"
-            value={`${totalCostAmadora.toFixed(2)}€`}
-            subtitle={`${breakdownsAmadora.length} avarias registadas`}
+            value="0.00€"
+            subtitle="0 avarias registadas"
           />
           <MetricCard
             title="Custos Avarias Queluz"
-            value={`${totalCostQueluz.toFixed(2)}€`}
-            subtitle={`${breakdownsQueluz.length} avarias registadas`}
+            value={`${summary.totalCost.toFixed(2)}€`}
+            subtitle={`${summary.totalBreakdowns} avarias registadas`}
           />
           <MetricCard
-            title="CMP Médio Queluz"
-            value="98.3%"
-            target="96%"
-            trend="up"
-            subtitle="Objetivo: 96%"
+            title="Avarias Pendentes"
+            value={`${summary.pending}`}
+            target="0"
+            trend={summary.pending === 0 ? "up" : "down"}
+            subtitle="Avarias em aberto"
           />
           <MetricCard
-            title="Taxa Concretização Média"
-            value="38%"
-            subtitle="Amadora: 25% | Queluz: 47%"
+            title="Tempo Médio Resolução"
+            value={`${summary.avgResolutionTime}h`}
+            subtitle="Estimado"
           />
         </div>
       </section>
@@ -123,12 +136,19 @@ export const MaintenanceDashboard = () => {
                   {utilityData.map((row) => (
                     <TableRow key={row.mes}>
                       <TableCell className="font-medium">{row.mes}</TableCell>
-                      <TableCell>{row.aguaAmd} €</TableCell>
-                      <TableCell className="border-r">{row.eletAmd === "-" ? "-" : row.eletAmd + " €"}</TableCell>
+                      <TableCell>{row.aguaAmd}</TableCell>
+                      <TableCell className="border-r">{row.eletAmd}</TableCell>
                       <TableCell>{row.aguaQlz} €</TableCell>
                       <TableCell>{row.eletQlz} €</TableCell>
                     </TableRow>
                   ))}
+                  {utilityData.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                        Nenhum dado de utilidades disponível.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -144,49 +164,42 @@ export const MaintenanceDashboard = () => {
               <AlertTriangle className="h-5 w-5 text-primary" />
               Avarias Registadas
             </CardTitle>
-            <CardDescription>Histórico de avarias e custos de reparação</CardDescription>
+            <CardDescription>Clique em uma avaria para alterar o status</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-2">
               <div>
                 <h3 className="font-semibold mb-4 text-lg">Amadora (20)</h3>
                 <div className="space-y-3">
-                  {breakdownsAmadora.map((breakdown, idx) => (
-                    <div key={idx} className="p-3 border rounded-lg bg-muted/30">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="font-semibold text-sm">{breakdown.equip}</p>
-                        <Badge variant="outline">{breakdown.custo}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-1">{breakdown.causa}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Data: {breakdown.data} {breakdown.pecas !== "-" && `| Peças: ${breakdown.pecas}`}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-3 bg-primary/10 rounded-lg">
-                  <p className="text-sm font-semibold">Total: {totalCostAmadora.toFixed(2)}€</p>
+                  <p className="text-sm text-muted-foreground">Sem acesso aos dados.</p>
                 </div>
               </div>
 
               <div>
                 <h3 className="font-semibold mb-4 text-lg">Queluz (32)</h3>
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                   {breakdownsQueluz.map((breakdown, idx) => (
-                    <div key={idx} className="p-3 border rounded-lg bg-muted/30">
+                    <div
+                      key={idx}
+                      className="p-3 border rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleCardClick(breakdown)}
+                    >
                       <div className="flex justify-between items-start mb-2">
-                        <p className="font-semibold text-sm">{breakdown.equip}</p>
-                        <Badge variant="outline">{breakdown.custo}</Badge>
+                        <p className="font-semibold text-sm">{breakdown.equipamento}</p>
+                        <Badge variant="outline">{breakdown.custo.toFixed(2)}€</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1">{breakdown.causa || "-"}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {breakdown.data !== "-" && `Data: ${breakdown.data}`} {breakdown.pecas !== "-" && `| Peças: ${breakdown.pecas}`}
-                      </p>
+                      <p className="text-xs text-muted-foreground mb-1">{breakdown.problema || "-"}</p>
+                      <div className="text-xs text-muted-foreground">
+                        Data: {breakdown.data} | Status: <Badge variant={breakdown.status === 'Concluído' ? 'default' : breakdown.status === 'Em Resolução' ? 'secondary' : 'destructive'} className="text-[10px] h-5 px-1">{breakdown.status}</Badge>
+                      </div>
                     </div>
                   ))}
+                  {breakdownsQueluz.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nenhuma avaria registrada.</p>
+                  )}
                 </div>
                 <div className="mt-4 p-3 bg-primary/10 rounded-lg">
-                  <p className="text-sm font-semibold">Total: {totalCostQueluz.toFixed(2)}€</p>
+                  <p className="text-sm font-semibold">Total: {summary.totalCost.toFixed(2)}€</p>
                 </div>
               </div>
             </div>
@@ -218,14 +231,13 @@ export const MaintenanceDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {performanceData.map((row) => (
-                      <TableRow key={row.mes}>
-                        <TableCell className="font-medium">{row.mes}</TableCell>
-                        <TableCell>{row.cmpAmd}</TableCell>
-                        <TableCell>{row.plAmd}</TableCell>
-                        <TableCell>{row.avalAmd}</TableCell>
+                    {performanceData.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                          Sem dados.
+                        </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -258,6 +270,13 @@ export const MaintenanceDashboard = () => {
                         <TableCell>{row.avalQlz}</TableCell>
                       </TableRow>
                     ))}
+                    {performanceData.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                          Sem dados.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -266,118 +285,41 @@ export const MaintenanceDashboard = () => {
         </Card>
       </section>
 
-      {/* Performance Tracking 20/32 */}
-      <section>
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance 20/32 - Tracking Mensal</CardTitle>
-            <CardDescription>Indicadores de cumprimento de metas (OK/NOK)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Amadora (20)</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>G. Gerais</TableHead>
-                      <TableHead>CMP</TableHead>
-                      <TableHead>PL</TableHead>
-                      <TableHead>Aval.</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Taxa</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {performanceTracking.map((row) => (
-                      <TableRow key={row.mes}>
-                        <TableCell className="font-medium">{row.mes}</TableCell>
-                        <TableCell>
-                          <Badge variant={row.gastosGerais === "OK" ? "default" : "destructive"}>
-                            {row.gastosGerais}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={row.cmp === "OK" ? "default" : "destructive"}>
-                            {row.cmp}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={row.pl === "OK" ? "default" : "destructive"}>
-                            {row.pl}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={row.aval === "OK" ? "default" : "destructive"}>
-                            {row.aval}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-semibold">{row.total}/4</TableCell>
-                        <TableCell>
-                          <Badge variant={parseFloat(row.taxa) >= 50 ? "default" : "secondary"}>
-                            {row.taxa}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-4 text-lg">Queluz (32)</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>G. Gerais</TableHead>
-                      <TableHead>CMP</TableHead>
-                      <TableHead>PL</TableHead>
-                      <TableHead>Aval.</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Taxa</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {performanceTrackingQueluz.map((row) => (
-                      <TableRow key={row.mes}>
-                        <TableCell className="font-medium">{row.mes}</TableCell>
-                        <TableCell>
-                          <Badge variant={row.gastosGerais === "OK" ? "default" : "destructive"}>
-                            {row.gastosGerais}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={row.cmp === "OK" ? "default" : "destructive"}>
-                            {row.cmp}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={row.pl === "OK" ? "default" : "destructive"}>
-                            {row.pl}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={row.aval === "OK" ? "default" : "destructive"}>
-                            {row.aval}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-semibold">{row.total}/4</TableCell>
-                        <TableCell>
-                          <Badge variant={parseFloat(row.taxa) >= 50 ? "default" : "secondary"}>
-                            {row.taxa}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+      {/* Edit Status Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Atualizar Status da Avaria</DialogTitle>
+            <DialogDescription>
+              Altere o status da avaria para {selectedBreakdown?.equipamento}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Status
+              </Label>
+              <Select value={newStatus} onValueChange={setNewStatus}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Em Resolução">Em Resolução</SelectItem>
+                  <SelectItem value="Concluído">Concluído</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveStatus} disabled={isUpdating}>
+              {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
