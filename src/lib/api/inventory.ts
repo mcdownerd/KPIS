@@ -14,25 +14,16 @@ export interface InventoryDeviation {
 
 /**
  * Fetch inventory deviations for a specific date range
+ * Now fetches from ALL stores to enable cross-store visibility
  */
 export async function getInventoryDeviationsByDateRange(startDate: string, endDate: string) {
     const { data: profile } = await supabase.auth.getUser()
     if (!profile.user) throw new Error('User not authenticated')
 
-    const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('store_id')
-        .eq('id', profile.user.id)
-        .single()
-
-    if (!userProfile?.store_id) {
-        return []
-    }
-
+    // Fetch deviations from ALL stores (not filtered by user's store)
     const { data, error } = await supabase
         .from('inventory_deviations')
         .select('*')
-        .eq('store_id', userProfile.store_id)
         .gte('record_date', startDate)
         .lte('record_date', endDate)
         .order('record_date', { ascending: true })

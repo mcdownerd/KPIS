@@ -69,7 +69,11 @@ const serviceStores = ["Amadora", "Queluz", "P.Borges"];
 
 import { useAuth } from "@/hooks/useAuth";
 
-export function DataEntryForm() {
+interface DataEntryFormProps {
+  onTabChange?: (tab: 'costs' | 'deviations' | 'yields') => void;
+}
+
+export function DataEntryForm({ onTabChange }: DataEntryFormProps = {}) {
   const { profile } = useAuth();
 
   const [costData, setCostData] = useState<CostData>({
@@ -299,7 +303,11 @@ export function DataEntryForm() {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="costs" className="w-full">
+      <Tabs defaultValue="costs" className="w-full" onValueChange={(value) => {
+        if (onTabChange) {
+          onTabChange(value as 'costs' | 'deviations' | 'yields');
+        }
+      }}>
         <TabsList className="h-auto flex flex-col sm:grid w-full sm:grid-cols-3 bg-secondary p-1">
           <TabsTrigger value="costs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             Custo de Vendas

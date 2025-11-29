@@ -64,21 +64,13 @@ export async function getYieldsByMonth(month: number, year: number) {
     const { data: profile } = await supabase.auth.getUser()
     if (!profile.user) throw new Error('User not authenticated')
 
-    const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('store_id')
-        .eq('id', profile.user.id)
-        .single()
-
-    if (!userProfile?.store_id) return []
-
     const startDate = new Date(year, month, 1).toISOString().split('T')[0]
     const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
 
+    // Fetch yields from ALL stores (not filtered by user's store)
     const { data, error } = await supabase
         .from('product_yields')
         .select('*')
-        .eq('store_id', userProfile.store_id)
         .gte('record_date', startDate)
         .lte('record_date', endDate)
         .order('record_date', { ascending: true })
@@ -86,3 +78,4 @@ export async function getYieldsByMonth(month: number, year: number) {
     if (error) throw error
     return data || []
 }
+

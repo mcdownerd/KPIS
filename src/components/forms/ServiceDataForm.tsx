@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Save, Clock, Star, MessageSquare, TrendingUp, Package } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  upsertServiceTimeMetrics, getServiceTimeMetrics,
+  upsertQualityMetrics, getQualityMetrics,
+  upsertComplaintsMetrics, getComplaintsMetrics,
+  upsertDigitalCommMetrics, getDigitalCommMetrics,
+  upsertUberMetrics, getUberMetrics,
+  upsertSalesSummaryMetrics, getSalesSummaryMetrics
+} from "@/lib/api/service";
 
 interface ServiceTimeData {
   month: string;
@@ -83,6 +92,7 @@ const months = [
 const stores = ["Amadora (20)", "Queluz (32)", "P.Borges"];
 
 export function ServiceDataForm() {
+  const { profile } = useAuth();
   const [serviceTimeData, setServiceTimeData] = useState<ServiceTimeData>({
     month: "",
     store: "",
@@ -150,107 +160,399 @@ export function ServiceDataForm() {
     percentMop: ""
   });
 
-  const handleServiceTimeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Service time data submitted:", serviceTimeData);
-    toast.success("Dados de tempos de serviço salvos com sucesso!");
-    
-    setServiceTimeData({
-      month: serviceTimeData.month,
-      store: serviceTimeData.store,
-      almocoTempo: "",
-      almocoVar: "",
-      almocoRank: "",
-      jantarTempo: "",
-      jantarVar: "",
-      jantarRank: "",
-      diaTempo: "",
-      diaVar: "",
-      diaRank: "",
-      deliveryTempo: "",
-      deliveryVar: "",
-      deliveryRank: ""
-    });
+  // Store mapping for UUIDs
+  const storeMapping: Record<string, string> = {
+    "Amadora (20)": "f86b0b1f-05d0-4310-a655-a92ca1ab68bf",
+    "Queluz (32)": "fcf80b5a-b658-48f3-871c-ac62120c5a78"
   };
 
-  const handleQualitySubmit = (e: React.FormEvent) => {
+  // Auto-fill store and current month
+  useEffect(() => {
+    const currentMonthIndex = new Date().getMonth();
+    const currentMonthName = months[currentMonthIndex];
+
+    let storeName = "";
+    if (profile?.store_id) {
+      if (profile.store_id === 'fcf80b5a-b658-48f3-871c-ac62120c5a78') storeName = "Queluz (32)";
+      else if (profile.store_id === 'f86b0b1f-05d0-4310-a655-a92ca1ab68bf') storeName = "Amadora (20)";
+    }
+
+    // Update all form states with current month and store
+    if (storeName) {
+      setServiceTimeData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+      setQualityData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+      setComplaintsData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+      setDigitalCommData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+      setUberMetricsData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+      setSalesData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
+    } else {
+      // If no profile yet, just set the month
+      setServiceTimeData(prev => ({ ...prev, month: currentMonthName }));
+      setQualityData(prev => ({ ...prev, month: currentMonthName }));
+      setComplaintsData(prev => ({ ...prev, month: currentMonthName }));
+      setDigitalCommData(prev => ({ ...prev, month: currentMonthName }));
+      setUberMetricsData(prev => ({ ...prev, month: currentMonthName }));
+      setSalesData(prev => ({ ...prev, month: currentMonthName }));
+    }
+  }, [profile]);
+
+  // Fetch Service Time Data
+  useEffect(() => {
+    async function loadData() {
+      if (serviceTimeData.month && serviceTimeData.store) {
+        const storeId = storeMapping[serviceTimeData.store];
+        if (storeId) {
+          try {
+            const data = await getServiceTimeMetrics(serviceTimeData.month, storeId);
+            if (data) {
+              setServiceTimeData(prev => ({
+                ...prev,
+                almocoTempo: data.almoco_tempo?.toString() || "",
+                almocoVar: data.almoco_var?.toString() || "",
+                almocoRank: data.almoco_rank?.toString() || "",
+                jantarTempo: data.jantar_tempo?.toString() || "",
+                jantarVar: data.jantar_var?.toString() || "",
+                jantarRank: data.jantar_rank?.toString() || "",
+                diaTempo: data.dia_tempo?.toString() || "",
+                diaVar: data.dia_var?.toString() || "",
+                diaRank: data.dia_rank?.toString() || "",
+                deliveryTempo: data.delivery_tempo?.toString() || "",
+                deliveryVar: data.delivery_var?.toString() || "",
+                deliveryRank: data.delivery_rank?.toString() || ""
+              }));
+            } else {
+              // Clear fields if no data found
+              setServiceTimeData(prev => ({
+                ...prev,
+                almocoTempo: "", almocoVar: "", almocoRank: "",
+                jantarTempo: "", jantarVar: "", jantarRank: "",
+                diaTempo: "", diaVar: "", diaRank: "",
+                deliveryTempo: "", deliveryVar: "", deliveryRank: ""
+              }));
+            }
+          } catch (error) {
+            console.error("Error loading service time data:", error);
+          }
+        }
+      }
+    }
+    loadData();
+  }, [serviceTimeData.month, serviceTimeData.store]);
+
+  // Fetch Quality Data
+  useEffect(() => {
+    async function loadData() {
+      if (qualityData.month && qualityData.store) {
+        const storeId = storeMapping[qualityData.store];
+        if (storeId) {
+          try {
+            const data = await getQualityMetrics(qualityData.month, storeId);
+            if (data) {
+              setQualityData(prev => ({
+                ...prev,
+                sg: data.sg?.toString() || "",
+                precisao: data.precisao?.toString() || "",
+                qualidade: data.qualidade?.toString() || "",
+                rapidez: data.rapidez?.toString() || "",
+                nps: data.nps?.toString() || ""
+              }));
+            } else {
+              setQualityData(prev => ({
+                ...prev,
+                sg: "", precisao: "", qualidade: "", rapidez: "", nps: ""
+              }));
+            }
+          } catch (error) {
+            console.error("Error loading quality data:", error);
+          }
+        }
+      }
+    }
+    loadData();
+  }, [qualityData.month, qualityData.store]);
+
+  // Fetch Complaints Data
+  useEffect(() => {
+    async function loadData() {
+      if (complaintsData.month && complaintsData.store) {
+        const storeId = storeMapping[complaintsData.store];
+        if (storeId) {
+          try {
+            const data = await getComplaintsMetrics(complaintsData.month, storeId);
+            if (data) {
+              setComplaintsData(prev => ({
+                ...prev,
+                qualidadeSala: data.qualidade_sala?.toString() || "",
+                qualidadeDelivery: data.qualidade_delivery?.toString() || "",
+                servicoSala: data.servico_sala?.toString() || "",
+                servicoDelivery: data.servico_delivery?.toString() || "",
+                limpezaSala: data.limpeza_sala?.toString() || "",
+                limpezaDelivery: data.limpeza_delivery?.toString() || ""
+              }));
+            } else {
+              setComplaintsData(prev => ({
+                ...prev,
+                qualidadeSala: "", qualidadeDelivery: "",
+                servicoSala: "", servicoDelivery: "",
+                limpezaSala: "", limpezaDelivery: ""
+              }));
+            }
+          } catch (error) {
+            console.error("Error loading complaints data:", error);
+          }
+        }
+      }
+    }
+    loadData();
+  }, [complaintsData.month, complaintsData.store]);
+
+  // Fetch Digital Comm Data
+  useEffect(() => {
+    async function loadData() {
+      if (digitalCommData.month && digitalCommData.store) {
+        const storeId = storeMapping[digitalCommData.store];
+        if (storeId) {
+          try {
+            const data = await getDigitalCommMetrics(digitalCommData.month, storeId);
+            if (data) {
+              setDigitalCommData(prev => ({
+                ...prev,
+                googleRating: data.google_rating?.toString() || "",
+                uberRating: data.uber_rating?.toString() || "",
+                deliveryRating: data.delivery_rating?.toString() || ""
+              }));
+            } else {
+              setDigitalCommData(prev => ({
+                ...prev,
+                googleRating: "", uberRating: "", deliveryRating: ""
+              }));
+            }
+          } catch (error) {
+            console.error("Error loading digital comm data:", error);
+          }
+        }
+      }
+    }
+    loadData();
+  }, [digitalCommData.month, digitalCommData.store]);
+
+  // Fetch Uber Metrics Data
+  useEffect(() => {
+    async function loadData() {
+      if (uberMetricsData.month && uberMetricsData.store) {
+        const storeId = storeMapping[uberMetricsData.store];
+        if (storeId) {
+          try {
+            const data = await getUberMetrics(uberMetricsData.month, storeId);
+            if (data) {
+              setUberMetricsData(prev => ({
+                ...prev,
+                estrelas: data.estrelas?.toString() || "",
+                tempos: data.tempos?.toString() || "",
+                inexatidao: data.inexatidao?.toString() || "",
+                avaProduto: data.ava_produto?.toString() || "",
+                tempoTotal: data.tempo_total?.toString() || ""
+              }));
+            } else {
+              setUberMetricsData(prev => ({
+                ...prev,
+                estrelas: "", tempos: "", inexatidao: "", avaProduto: "", tempoTotal: ""
+              }));
+            }
+          } catch (error) {
+            console.error("Error loading uber metrics data:", error);
+          }
+        }
+      }
+    }
+    loadData();
+  }, [uberMetricsData.month, uberMetricsData.store]);
+
+  // Fetch Sales Data
+  useEffect(() => {
+    async function loadData() {
+      if (salesData.month && salesData.store) {
+        const storeId = storeMapping[salesData.store];
+        if (storeId) {
+          try {
+            const data = await getSalesSummaryMetrics(salesData.month, storeId);
+            if (data) {
+              setSalesData(prev => ({
+                ...prev,
+                totais: data.totais?.toString() || "",
+                delivery: data.delivery?.toString() || "",
+                percentDelivery: data.percent_delivery?.toString() || "",
+                sala: data.sala?.toString() || "",
+                mop: data.mop?.toString() || "",
+                percentMop: data.percent_mop?.toString() || ""
+              }));
+            } else {
+              setSalesData(prev => ({
+                ...prev,
+                totais: "", delivery: "", percentDelivery: "",
+                sala: "", mop: "", percentMop: ""
+              }));
+            }
+          } catch (error) {
+            console.error("Error loading sales data:", error);
+          }
+        }
+      }
+    }
+    loadData();
+  }, [salesData.month, salesData.store]);
+
+
+  const handleServiceTimeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Quality data submitted:", qualityData);
-    toast.success("Dados de qualidade salvos com sucesso!");
-    
-    setQualityData({
-      month: qualityData.month,
-      store: qualityData.store,
-      sg: "",
-      precisao: "",
-      qualidade: "",
-      rapidez: "",
-      nps: ""
-    });
+    try {
+      const monthIndex = months.indexOf(serviceTimeData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      await upsertServiceTimeMetrics({
+        month_name: serviceTimeData.month,
+        record_date: recordDate,
+        almoco_tempo: parseInt(serviceTimeData.almocoTempo) || 0,
+        almoco_var: parseInt(serviceTimeData.almocoVar) || 0,
+        almoco_rank: parseInt(serviceTimeData.almocoRank) || 0,
+        jantar_tempo: parseInt(serviceTimeData.jantarTempo) || 0,
+        jantar_var: parseInt(serviceTimeData.jantarVar) || 0,
+        jantar_rank: parseInt(serviceTimeData.jantarRank) || 0,
+        dia_tempo: parseInt(serviceTimeData.diaTempo) || 0,
+        dia_var: parseInt(serviceTimeData.diaVar) || 0,
+        dia_rank: parseInt(serviceTimeData.diaRank) || 0,
+        delivery_tempo: parseInt(serviceTimeData.deliveryTempo) || 0,
+        delivery_var: parseInt(serviceTimeData.deliveryVar) || 0,
+        delivery_rank: parseInt(serviceTimeData.deliveryRank) || 0
+      });
+
+      toast.success("Dados de tempos de serviço salvos com sucesso!");
+      // No reset needed as we want to keep the data visible
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar dados de tempos de serviço.");
+    }
   };
 
-  const handleComplaintsSubmit = (e: React.FormEvent) => {
+  const handleQualitySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Complaints data submitted:", complaintsData);
-    toast.success("Dados de reclamações salvos com sucesso!");
-    
-    setComplaintsData({
-      month: complaintsData.month,
-      store: complaintsData.store,
-      qualidadeSala: "",
-      qualidadeDelivery: "",
-      servicoSala: "",
-      servicoDelivery: "",
-      limpezaSala: "",
-      limpezaDelivery: ""
-    });
+    try {
+      const monthIndex = months.indexOf(qualityData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      await upsertQualityMetrics({
+        month_name: qualityData.month,
+        record_date: recordDate,
+        sg: parseFloat(qualityData.sg) || 0,
+        precisao: parseFloat(qualityData.precisao) || 0,
+        qualidade: parseFloat(qualityData.qualidade) || 0,
+        rapidez: parseFloat(qualityData.rapidez) || 0,
+        nps: parseFloat(qualityData.nps) || 0
+      });
+
+      toast.success("Dados de qualidade salvos com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar dados de qualidade.");
+    }
   };
 
-  const handleDigitalCommSubmit = (e: React.FormEvent) => {
+  const handleComplaintsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Digital communication data submitted:", digitalCommData);
-    toast.success("Dados de comunicação digital salvos com sucesso!");
-    
-    setDigitalCommData({
-      month: digitalCommData.month,
-      store: digitalCommData.store,
-      googleRating: "",
-      uberRating: "",
-      deliveryRating: ""
-    });
+    try {
+      const monthIndex = months.indexOf(complaintsData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      await upsertComplaintsMetrics({
+        month_name: complaintsData.month,
+        record_date: recordDate,
+        qualidade_sala: parseInt(complaintsData.qualidadeSala) || 0,
+        qualidade_delivery: parseInt(complaintsData.qualidadeDelivery) || 0,
+        servico_sala: parseInt(complaintsData.servicoSala) || 0,
+        servico_delivery: parseInt(complaintsData.servicoDelivery) || 0,
+        limpeza_sala: parseInt(complaintsData.limpezaSala) || 0,
+        limpeza_delivery: parseInt(complaintsData.limpezaDelivery) || 0
+      });
+
+      toast.success("Dados de reclamações salvos com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar dados de reclamações.");
+    }
   };
 
-  const handleUberMetricsSubmit = (e: React.FormEvent) => {
+  const handleDigitalCommSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Uber metrics data submitted:", uberMetricsData);
-    toast.success("Dados de métricas Uber salvos com sucesso!");
-    
-    setUberMetricsData({
-      month: uberMetricsData.month,
-      store: uberMetricsData.store,
-      estrelas: "",
-      tempos: "",
-      inexatidao: "",
-      avaProduto: "",
-      tempoTotal: ""
-    });
+    try {
+      const monthIndex = months.indexOf(digitalCommData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      await upsertDigitalCommMetrics({
+        month_name: digitalCommData.month,
+        record_date: recordDate,
+        google_rating: parseFloat(digitalCommData.googleRating) || 0,
+        uber_rating: parseFloat(digitalCommData.uberRating) || 0,
+        delivery_rating: parseFloat(digitalCommData.deliveryRating) || 0
+      });
+
+      toast.success("Dados de comunicação digital salvos com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar dados de comunicação digital.");
+    }
   };
 
-  const handleSalesSubmit = (e: React.FormEvent) => {
+  const handleUberMetricsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sales data submitted:", salesData);
-    toast.success("Dados de vendas por plataforma salvos com sucesso!");
-    
-    setSalesData({
-      month: salesData.month,
-      store: salesData.store,
-      totais: "",
-      delivery: "",
-      percentDelivery: "",
-      sala: "",
-      mop: "",
-      percentMop: ""
-    });
+    try {
+      const monthIndex = months.indexOf(uberMetricsData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      await upsertUberMetrics({
+        month_name: uberMetricsData.month,
+        record_date: recordDate,
+        estrelas: parseFloat(uberMetricsData.estrelas) || 0,
+        tempos: parseInt(uberMetricsData.tempos) || 0,
+        inexatidao: parseFloat(uberMetricsData.inexatidao) || 0,
+        ava_produto: parseFloat(uberMetricsData.avaProduto) || 0,
+        tempo_total: parseInt(uberMetricsData.tempoTotal) || 0
+      });
+
+      toast.success("Dados de métricas Uber salvos com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar dados de métricas Uber.");
+    }
+  };
+
+  const handleSalesSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const monthIndex = months.indexOf(salesData.month);
+      const year = new Date().getFullYear();
+      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+
+      await upsertSalesSummaryMetrics({
+        month_name: salesData.month,
+        record_date: recordDate,
+        totais: parseFloat(salesData.totais) || 0,
+        delivery: parseFloat(salesData.delivery) || 0,
+        percent_delivery: parseFloat(salesData.percentDelivery) || 0,
+        sala: parseFloat(salesData.sala) || 0,
+        mop: parseFloat(salesData.mop) || 0,
+        percent_mop: parseFloat(salesData.percentMop) || 0
+      });
+
+      toast.success("Dados de vendas por plataforma salvos com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao salvar dados de vendas.");
+    }
   };
 
   return (
@@ -322,6 +624,7 @@ export function ServiceDataForm() {
                     <Select
                       value={serviceTimeData.store}
                       onValueChange={(value) => setServiceTimeData({ ...serviceTimeData, store: value })}
+                      disabled={!!profile?.store_id}
                       required
                     >
                       <SelectTrigger id="servicetime-store">
@@ -546,6 +849,7 @@ export function ServiceDataForm() {
                     <Select
                       value={qualityData.store}
                       onValueChange={(value) => setQualityData({ ...qualityData, store: value })}
+                      disabled={!!profile?.store_id}
                       required
                     >
                       <SelectTrigger id="quality-store">
@@ -677,6 +981,7 @@ export function ServiceDataForm() {
                     <Select
                       value={complaintsData.store}
                       onValueChange={(value) => setComplaintsData({ ...complaintsData, store: value })}
+                      disabled={!!profile?.store_id}
                       required
                     >
                       <SelectTrigger id="complaints-store">
@@ -831,6 +1136,7 @@ export function ServiceDataForm() {
                     <Select
                       value={digitalCommData.store}
                       onValueChange={(value) => setDigitalCommData({ ...digitalCommData, store: value })}
+                      disabled={!!profile?.store_id}
                       required
                     >
                       <SelectTrigger id="digital-store">
@@ -936,6 +1242,7 @@ export function ServiceDataForm() {
                     <Select
                       value={uberMetricsData.store}
                       onValueChange={(value) => setUberMetricsData({ ...uberMetricsData, store: value })}
+                      disabled={!!profile?.store_id}
                       required
                     >
                       <SelectTrigger id="uber-store">
@@ -1067,6 +1374,7 @@ export function ServiceDataForm() {
                     <Select
                       value={salesData.store}
                       onValueChange={(value) => setSalesData({ ...salesData, store: value })}
+                      disabled={!!profile?.store_id}
                       required
                     >
                       <SelectTrigger id="sales-store">
