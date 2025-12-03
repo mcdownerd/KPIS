@@ -59,7 +59,7 @@ export async function getCurrentUserProfile(userId?: string) {
     }
 
     try {
-        // Timeout de 5s para evitar travamentos
+        console.log('Fetching profile for:', targetUserId)
         const queryPromise = supabase
             .from('user_profiles')
             .select('*')
