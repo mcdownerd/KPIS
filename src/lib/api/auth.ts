@@ -7,12 +7,14 @@ export async function signUp(email: string, password: string, fullName: string) 
         options: {
             data: {
                 full_name: fullName,
+                role: 'user',
             },
         },
     })
 
     if (error) throw error
 
+    // Still insert into user_profiles for backward compatibility
     if (data.user) {
         const { error: profileError } = await supabase
             .from('user_profiles')
@@ -23,7 +25,7 @@ export async function signUp(email: string, password: string, fullName: string) 
                 role: 'user',
             }])
 
-        if (profileError) throw profileError
+        if (profileError) console.warn('Profile insert failed:', profileError)
     }
 
     return data
@@ -50,39 +52,31 @@ export async function getCurrentUser() {
     return user
 }
 
+// Helper to map Supabase user to our UserProfile format
+export function mapSupabaseUserToProfile(user: any) {
+    if (!user) return null
+
+    const metadata = user.user_metadata || {}
+
+    return {
+        id: user.id,
+        email: user.email || '',
+        full_name: metadata.full_name || user.email?.split('@')[0] || 'Utilizador',
+        role: metadata.role || 'user',
+        store_id: metadata.store_id || null,
+        is_admin: metadata.is_admin === true || metadata.role === 'admin',
+        store_name: metadata.store_name || null,
+    }
+}
+
 export async function getCurrentUserProfile(userId?: string) {
-    let targetUserId = userId;
-    if (!targetUserId) {
-        const user = await getCurrentUser()
-        if (!user) return null
-        targetUserId = user.id
-    }
+    // Get user from auth (fast, no RLS issues)
+    const { data: { user } } = await supabase.auth.getUser()
 
-    try {
-        console.log('Fetching profile for:', targetUserId)
-        const queryPromise = supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', targetUserId)
-            .single()
+    if (!user) return null
 
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Query timeout')), 15000)
-        )
-
-        const result = await Promise.race([queryPromise, timeoutPromise]) as { data: unknown; error: unknown }
-        const { data, error } = result
-
-        if (error) {
-            console.error('Error loading profile:', error)
-            return null
-        }
-
-        return data
-    } catch (err) {
-        console.error('Error loading profile:', err)
-        return null
-    }
+    // Extract profile from user_metadata
+    return mapSupabaseUserToProfile(user)
 }
 
 export async function updateUserProfile(userId: string, updates: {
@@ -90,6 +84,14 @@ export async function updateUserProfile(userId: string, updates: {
     store_id?: string
     role?: string
 }) {
+    // Update both user_metadata and user_profiles table
+    const { error: authError } = await supabase.auth.updateUser({
+        data: updates
+    })
+
+    if (authError) throw authError
+
+    // Also update user_profiles for backward compatibility
     const { data, error } = await supabase
         .from('user_profiles')
         .update(updates)
@@ -97,13 +99,15 @@ export async function updateUserProfile(userId: string, updates: {
         .select()
         .single()
 
-    if (error) throw error
-    return data
+    if (error) console.warn('Profile table update failed:', error)
+
+    // Return the updated profile from metadata
+    return mapSupabaseUserToProfile((await getCurrentUser())!)
 }
 
 export async function isUserAdmin() {
     const profile = await getCurrentUserProfile()
-    return profile?.role === 'admin'
+    return profile?.is_admin || profile?.role === 'admin'
 }
 
 export async function resetPassword(email: string) {

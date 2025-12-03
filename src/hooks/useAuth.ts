@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getCurrentUser, getCurrentUserProfile, onAuthStateChange } from '@/lib/api/auth'
+import { getCurrentUser, getCurrentUserProfile, onAuthStateChange, mapSupabaseUserToProfile } from '@/lib/api/auth'
 import type { User } from '@supabase/supabase-js'
 
 interface UserProfile {
@@ -8,11 +8,8 @@ interface UserProfile {
     email: string | null
     role: string
     store_id: string | null
-    stores?: {
-        id: string
-        name: string
-        location: string | null
-    }
+    is_admin: boolean
+    store_name?: string | null
 }
 
 export function useAuth() {
@@ -23,28 +20,49 @@ export function useAuth() {
     useEffect(() => {
         let cancelled = false;
 
-        // loadInitialAuth removed to avoid race conditions with onAuthStateChange
-
         const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-            // console.log('[useAuth] Event:', event, 'Has session:', !!session, 'User ID:', session?.user?.id)
+            if (cancelled) return;
 
-            // Carregar perfil no SIGNED_IN e INITIAL_SESSION (F5)
+            // Handle auth state changes
             if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-                // console.log('[useAuth] Loading profile for event:', event)
                 setUser(session.user)
                 setLoading(true)
+
                 try {
-                    const userProfile = await getCurrentUserProfile(session.user.id)
-                    // console.log('[useAuth] Profile result:', userProfile)
-                    setProfile(userProfile)
+                    // Add timeout protection (2 seconds)
+                    const profilePromise = getCurrentUserProfile()
+                    const timeoutPromise = new Promise<null>((resolve) =>
+                        setTimeout(() => {
+                            console.warn('Profile load timed out - using session data')
+                            resolve(null)
+                        }, 2000)
+                    )
+
+                    const userProfile = await Promise.race([profilePromise, timeoutPromise])
+
+                    if (cancelled) return;
+
+                    // If timeout occurred, extract from session directly
+                    if (!userProfile && session.user) {
+                        setProfile(mapSupabaseUserToProfile(session.user))
+                    } else {
+                        setProfile(userProfile)
+                    }
                 } catch (error) {
                     console.error('[useAuth] Error loading profile:', error)
+                    // Fallback to session data
+                    if (session.user) {
+                        setProfile(mapSupabaseUserToProfile(session.user))
+                    }
                 } finally {
-                    setLoading(false)
+                    if (!cancelled) {
+                        setLoading(false)
+                    }
                 }
             } else if (event === 'SIGNED_OUT') {
                 setUser(null)
                 setProfile(null)
+                setLoading(false)
             }
         })
 
@@ -54,7 +72,7 @@ export function useAuth() {
         }
     }, [])
 
-    const isAdmin = profile?.role === 'admin'
+    const isAdmin = profile?.is_admin || profile?.role === 'admin'
     const isManager = profile?.role === 'gerente'
     const isConsultant = profile?.role === 'consultor'
     const canAccessAdmin = isAdmin || isManager
