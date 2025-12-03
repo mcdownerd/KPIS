@@ -32,10 +32,7 @@ export function useAuth() {
                     // Add timeout protection (2 seconds)
                     const profilePromise = getCurrentUserProfile()
                     const timeoutPromise = new Promise<null>((resolve) =>
-                        setTimeout(() => {
-                            console.warn('Profile load timed out - using session data')
-                            resolve(null)
-                        }, 2000)
+                        setTimeout(() => resolve(null), 2000)
                     )
 
                     const userProfile = await Promise.race([profilePromise, timeoutPromise])
