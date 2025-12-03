@@ -23,29 +23,7 @@ export function useAuth() {
     useEffect(() => {
         let cancelled = false;
 
-        const loadInitialAuth = async () => {
-            try {
-                const currentUser = await getCurrentUser()
-
-                if (cancelled) return;
-                setUser(currentUser)
-
-                if (currentUser) {
-                    const userProfile = await getCurrentUserProfile()
-
-                    if (cancelled) return;
-                    setProfile(userProfile)
-                }
-            } catch (error) {
-                console.error('Error loading auth:', error)
-            } finally {
-                if (!cancelled) {
-                    setLoading(false)
-                }
-            }
-        }
-
-        loadInitialAuth()
+        // loadInitialAuth removed to avoid race conditions with onAuthStateChange
 
         const { data: { subscription } } = onAuthStateChange(async (event, session) => {
             // console.log('[useAuth] Event:', event, 'Has session:', !!session, 'User ID:', session?.user?.id)
