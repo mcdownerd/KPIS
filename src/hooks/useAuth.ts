@@ -62,6 +62,9 @@ export function useAuth() {
                 setUser(null)
                 setProfile(null)
                 setLoading(false)
+            } else if (event === 'INITIAL_SESSION' && !session) {
+                // No session on initial load - set loading false to show login
+                setLoading(false)
             }
         })
 
