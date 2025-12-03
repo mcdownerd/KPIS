@@ -67,7 +67,7 @@ export async function getCurrentUserProfile(userId?: string) {
             .single()
 
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Query timeout')), 5000)
+            setTimeout(() => reject(new Error('Query timeout')), 15000)
         )
 
         const result = await Promise.race([queryPromise, timeoutPromise]) as { data: unknown; error: unknown }
