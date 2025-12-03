@@ -18,9 +18,11 @@ export function useAuth() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        console.log('[useAuth] Initializing...')
         let cancelled = false;
 
         const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+            console.log('[useAuth] Event:', event, 'Session:', !!session)
             if (cancelled) return;
 
             // Handle auth state changes
