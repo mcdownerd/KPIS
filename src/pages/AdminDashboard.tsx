@@ -44,7 +44,7 @@ interface UserData {
     id: string;
     email: string;
     full_name: string | null;
-    role: 'admin' | 'user' | 'gerente' | 'consultor';
+    role: 'admin' | 'user' | 'gerente' | 'supervisor';
     store_id: string | null;
     created_at: string;
     stores?: { name: string } | null;
@@ -190,7 +190,7 @@ export function AdminDashboard() {
         }
     };
 
-    const updateUserRole = async (userId: string, newRole: 'admin' | 'user' | 'gerente' | 'consultor') => {
+    const updateUserRole = async (userId: string, newRole: 'admin' | 'user' | 'gerente' | 'supervisor') => {
         try {
             const { error } = await supabase
                 .from('user_profiles')
@@ -309,7 +309,7 @@ export function AdminDashboard() {
                                                     <TableCell>
                                                         <Select
                                                             defaultValue={user.role}
-                                                            onValueChange={(val: 'admin' | 'user' | 'gerente' | 'consultor') => updateUserRole(user.id, val)}
+                                                            onValueChange={(val: 'admin' | 'user' | 'gerente' | 'supervisor') => updateUserRole(user.id, val)}
                                                         >
                                                             <SelectTrigger className="w-[130px]">
                                                                 <SelectValue />
@@ -317,7 +317,7 @@ export function AdminDashboard() {
                                                             <SelectContent>
                                                                 <SelectItem value="user">Usuário</SelectItem>
                                                                 <SelectItem value="gerente">Gerente</SelectItem>
-                                                                <SelectItem value="consultor">Consultor</SelectItem>
+                                                                <SelectItem value="supervisor">Supervisor</SelectItem>
                                                                 <SelectItem value="admin">Admin</SelectItem>
                                                             </SelectContent>
                                                         </Select>
@@ -363,7 +363,7 @@ export function AdminDashboard() {
                                                         <span className="text-sm font-medium text-muted-foreground">Função</span>
                                                         <Select
                                                             defaultValue={user.role}
-                                                            onValueChange={(val: 'admin' | 'user' | 'gerente' | 'consultor') => updateUserRole(user.id, val)}
+                                                            onValueChange={(val: 'admin' | 'user' | 'gerente' | 'supervisor') => updateUserRole(user.id, val)}
                                                         >
                                                             <SelectTrigger className="w-[130px]">
                                                                 <SelectValue />
@@ -371,7 +371,7 @@ export function AdminDashboard() {
                                                             <SelectContent>
                                                                 <SelectItem value="user">Usuário</SelectItem>
                                                                 <SelectItem value="gerente">Gerente</SelectItem>
-                                                                <SelectItem value="consultor">Consultor</SelectItem>
+                                                                <SelectItem value="supervisor">Supervisor</SelectItem>
                                                                 <SelectItem value="admin">Admin</SelectItem>
                                                             </SelectContent>
                                                         </Select>

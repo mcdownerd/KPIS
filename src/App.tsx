@@ -25,11 +25,11 @@ const App = () => (
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<ProtectedRoute><StoreDashboard /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-            <Route path="/utilities" element={<ProtectedRoute><Utilities /></ProtectedRoute>} />
-            <Route path="/cash-register" element={<ProtectedRoute><DeliveryCashSheet /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute requireStore><StoreDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute requireStore><Index /></ProtectedRoute>} />
+            <Route path="/products" element={<ProtectedRoute requireStore><Products /></ProtectedRoute>} />
+            <Route path="/utilities" element={<ProtectedRoute requireStore><Utilities /></ProtectedRoute>} />
+            <Route path="/cash-register" element={<ProtectedRoute requireStore><DeliveryCashSheet /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

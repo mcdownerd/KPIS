@@ -31,7 +31,7 @@ export default function Products() {
   const [stores, setStores] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedStore, setSelectedStore] = useState<string>("all");
 
-  const isAdminOrConsultant = profile?.role === 'admin' || profile?.role === 'consultor';
+  const isAdminOrSupervisor = profile?.role === 'admin' || profile?.role === 'supervisor';
   const isAdmin = profile?.role === 'admin';
 
   const loadStores = useCallback(async () => {
@@ -65,7 +65,7 @@ export default function Products() {
         if (profile?.store_id) {
           filteredProducts = processedProducts.filter(p => p.store_id === profile.store_id);
         }
-      } else if (isAdminOrConsultant && selectedStore !== "all") {
+      } else if (isAdminOrSupervisor && selectedStore !== "all") {
         filteredProducts = processedProducts.filter(p => p.store_id === selectedStore);
       }
 
@@ -76,14 +76,14 @@ export default function Products() {
     } finally {
       setLoading(false);
     }
-  }, [isManager, profile?.store_id, isAdminOrConsultant, selectedStore]);
+  }, [isManager, profile?.store_id, isAdminOrSupervisor, selectedStore]);
 
   // Carregar dados inicial e quando filtros mudarem
   useEffect(() => {
     if (authLoading || !user || !profile) return;
 
     // Inline loadStores
-    if (isAdminOrConsultant) {
+    if (isAdminOrSupervisor) {
       supabase
         .from('stores')
         .select('id, name')
@@ -107,7 +107,7 @@ export default function Products() {
 
       if (isManager && profile?.store_id) {
         filteredProducts = processedProducts.filter(p => p.store_id === profile.store_id);
-      } else if (isAdminOrConsultant && selectedStore !== "all") {
+      } else if (isAdminOrSupervisor && selectedStore !== "all") {
         filteredProducts = processedProducts.filter(p => p.store_id === selectedStore);
       }
 
@@ -118,7 +118,7 @@ export default function Products() {
       toast.error("Erro ao carregar produtos.");
       setLoading(false);
     });
-  }, [authLoading, user, profile, selectedStore, isAdminOrConsultant, isManager]);
+  }, [authLoading, user, profile, selectedStore, isAdminOrSupervisor, isManager]);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -237,7 +237,7 @@ export default function Products() {
             <p className="text-muted-foreground mt-2">Controle de validade e estoque</p>
           </div>
           <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-            {isAdminOrConsultant && (
+            {isAdminOrSupervisor && (
               <Select value={selectedStore} onValueChange={setSelectedStore}>
                 <SelectTrigger className="w-full md:w-[250px]">
                   <SelectValue placeholder="Selecione uma loja" />

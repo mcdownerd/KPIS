@@ -76,7 +76,7 @@ export function useAuth() {
 
     const isAdmin = profile?.is_admin || profile?.role === 'admin'
     const isManager = profile?.role === 'gerente'
-    const isConsultant = profile?.role === 'consultor'
+    const isSupervisor = profile?.role === 'supervisor'
     const canAccessAdmin = isAdmin || isManager
     const hasStore = !!profile?.store_id
 
@@ -86,7 +86,7 @@ export function useAuth() {
         loading,
         isAdmin,
         isManager,
-        isConsultant,
+        isSupervisor,
         canAccessAdmin,
         hasStore,
         refetch: async () => {
