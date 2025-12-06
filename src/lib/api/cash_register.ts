@@ -144,3 +144,90 @@ export async function deleteCashRegisterShift(id: string) {
     if (error) throw error
     return true
 }
+
+/**
+ * Fetch cash register shifts for multiple months for comparison
+ * Returns data structured as Record<"YYYY-MM", DeliveryDay[]>
+ */
+export async function getCashRegisterShiftsForComparison(monthsBack: number = 12) {
+    const { data: profile } = await supabase.auth.getUser()
+    if (!profile.user) throw new Error('User not authenticated')
+
+    const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('store_id')
+        .eq('id', profile.user.id)
+        .single()
+
+    if (!userProfile?.store_id) return {}
+
+    // Calculate date range for the last N months
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setMonth(startDate.getMonth() - monthsBack)
+
+    const { data, error } = await supabase
+        .from('cash_register_shifts')
+        .select('*')
+        .eq('store_id', userProfile.store_id)
+        .gte('shift_date', startDate.toISOString().split('T')[0])
+        .lte('shift_date', endDate.toISOString().split('T')[0])
+        .order('shift_date', { ascending: true })
+
+    if (error) throw error
+    if (!data || data.length === 0) return {}
+
+    // Group shifts by month and day
+    const monthsData: Record<string, Map<number, any>> = {}
+
+    data.forEach(shift => {
+        const date = new Date(shift.shift_date)
+        const monthKey = `${date.getFullYear()}-${date.getMonth()}`
+        const day = date.getDate()
+
+        if (!monthsData[monthKey]) {
+            monthsData[monthKey] = new Map()
+        }
+
+        if (!monthsData[monthKey].has(day)) {
+            monthsData[monthKey].set(day, {
+                day,
+                morning_shifts: [],
+                night_shifts: [],
+                manager: shift.manager_name || ""
+            })
+        }
+
+        const dayData = monthsData[monthKey].get(day)
+        const uiShift = {
+            id: shift.id,
+            operator: shift.operator_name,
+            gcs: shift.gcs,
+            sales: shift.sales,
+            cash: shift.cash,
+            mb: shift.mb,
+            mbp: shift.mbp,
+            tr_euro: shift.tr_euro,
+            difference: shift.difference,
+            reimbursement_qty: shift.reimbursement_qty,
+            reimbursement_value: shift.reimbursement_value,
+            reimbursement_note: shift.reimbursement_note
+        }
+
+        if (shift.shift_type === 'morning') {
+            dayData.morning_shifts.push(uiShift)
+        } else {
+            dayData.night_shifts.push(uiShift)
+        }
+
+        if (shift.manager_name) dayData.manager = shift.manager_name
+    })
+
+    // Convert Maps to arrays
+    const result: Record<string, any[]> = {}
+    Object.keys(monthsData).forEach(monthKey => {
+        result[monthKey] = Array.from(monthsData[monthKey].values())
+    })
+
+    return result
+}

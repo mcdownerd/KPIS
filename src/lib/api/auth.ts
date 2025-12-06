@@ -70,12 +70,36 @@ export function mapSupabaseUserToProfile(user: any) {
 }
 
 export async function getCurrentUserProfile(userId?: string) {
-    // Get user from auth (fast, no RLS issues)
+    // Get user from auth
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) return null
 
-    // Extract profile from user_metadata
+    // Try to get profile from user_profiles table first
+    try {
+        const { data: profile, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+        if (profile && !error) {
+            // Return profile from database
+            return {
+                id: profile.id,
+                email: profile.email || user.email || '',
+                full_name: profile.full_name || user.email?.split('@')[0] || 'Utilizador',
+                role: profile.role || 'user',
+                store_id: profile.store_id || null,
+                is_admin: profile.is_admin === true || profile.role === 'admin',
+                store_name: profile.store_name || null,
+            }
+        }
+    } catch (error) {
+        console.warn('Failed to load profile from database, falling back to metadata:', error)
+    }
+
+    // Fallback to user_metadata if database query fails
     return mapSupabaseUserToProfile(user)
 }
 

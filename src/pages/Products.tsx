@@ -177,8 +177,9 @@ export default function Products() {
 
   const handleDeleteProduct = async (id: string) => {
     try {
-      await deleteProduct(id);
+      // Log action BEFORE deleting to avoid foreign key constraint error
       await logProductAction(id, 'EXCLUSAO', { deleted_at: new Date().toISOString() });
+      await deleteProduct(id);
       setProducts(products.filter(p => p.id !== id));
       toast.success("Produto removido com sucesso!");
     } catch (error: unknown) {
@@ -300,6 +301,7 @@ export default function Products() {
               onDelete={handleDeleteProduct}
               onViewHistory={handleViewHistory}
               isAdmin={isAdmin}
+              isManager={isManager}
               onCategoryUpdate={loadProducts}
             />
           </TabsContent>
@@ -311,6 +313,7 @@ export default function Products() {
               onDelete={handleDeleteProduct}
               onViewHistory={handleViewHistory}
               isAdmin={isAdmin}
+              isManager={isManager}
               onCategoryUpdate={loadProducts}
             />
           </TabsContent>

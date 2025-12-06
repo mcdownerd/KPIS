@@ -18,6 +18,7 @@ interface ProductTableProps {
   onDelete: (id: string) => void;
   onViewHistory?: (product: Product) => void;
   isAdmin?: boolean;
+  isManager?: boolean;
   onCategoryUpdate?: () => void;
 }
 
@@ -43,7 +44,7 @@ const groupProducts = (products: Product[]) => {
   return grouped;
 };
 
-export const ProductTable = ({ products, onEdit, onDelete, onViewHistory, isAdmin = false, onCategoryUpdate }: ProductTableProps) => {
+export const ProductTable = ({ products, onEdit, onDelete, onViewHistory, isAdmin = false, isManager = false, onCategoryUpdate }: ProductTableProps) => {
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
 
@@ -223,14 +224,16 @@ export const ProductTable = ({ products, onEdit, onDelete, onViewHistory, isAdmi
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => onDelete(product.id)}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {!isManager && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => onDelete(product.id)}
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -326,15 +329,17 @@ export const ProductTable = ({ products, onEdit, onDelete, onViewHistory, isAdmi
                         <Pencil className="h-4 w-4 mr-2" />
                         Editar
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(product.id)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Excluir
-                      </Button>
+                      {!isManager && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(product.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Excluir
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 ))}

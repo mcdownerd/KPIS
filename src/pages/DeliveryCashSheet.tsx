@@ -8,7 +8,7 @@ import { RestaurantAverage } from "@/components/delivery/RestaurantAverage";
 import { MonthComparison } from "@/components/delivery/MonthComparison";
 import { DeliveryDay, DeliveryShift } from "@/types/delivery";
 import { useAuth } from "@/hooks/useAuth";
-import { getCashRegisterShiftsByMonth, upsertCashRegisterShift, CashRegisterShift } from "@/lib/api/cash_register";
+import { getCashRegisterShiftsByMonth, upsertCashRegisterShift, getCashRegisterShiftsForComparison, CashRegisterShift } from "@/lib/api/cash_register";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
@@ -31,6 +31,7 @@ const DeliveryCashSheet = () => {
 
   // Estado local formatado para a UI
   const [monthData, setMonthData] = useState<DeliveryDay[]>([]);
+  const [comparisonData, setComparisonData] = useState<Record<string, DeliveryDay[]>>({});
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -43,6 +44,12 @@ const DeliveryCashSheet = () => {
       loadMonthData();
     }
   }, [selectedMonth, selectedYear, user]);
+
+  useEffect(() => {
+    if (user) {
+      loadComparisonData();
+    }
+  }, [user]);
 
   const loadMonthData = async () => {
     setLoading(true);
@@ -97,6 +104,16 @@ const DeliveryCashSheet = () => {
       toast.error("Erro ao carregar folha de caixa.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadComparisonData = async () => {
+    try {
+      const data = await getCashRegisterShiftsForComparison(12);
+      setComparisonData(data);
+    } catch (error) {
+      console.error("Erro ao carregar dados de comparação:", error);
+      // Não mostra toast para não incomodar o usuário, apenas loga o erro
     }
   };
 
@@ -272,11 +289,7 @@ const DeliveryCashSheet = () => {
                 </TabsContent>
 
                 <TabsContent value="comparison" className="space-y-4">
-                  {/* TODO: Implementar comparação real com dados do banco */}
-                  <div className="p-4 text-center text-muted-foreground">
-                    Comparação de meses em desenvolvimento...
-                  </div>
-                  {/* <MonthComparison allMonthsData={{}} months={MONTHS} /> */}
+                  <MonthComparison allMonthsData={comparisonData} months={MONTHS} />
                 </TabsContent>
               </Tabs>
             )}
