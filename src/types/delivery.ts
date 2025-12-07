@@ -17,7 +17,8 @@ export interface DeliveryDay {
   day: number;
   morning_shifts: DeliveryShift[];
   night_shifts: DeliveryShift[];
-  manager: string;
+  manager_morning: string;
+  manager_night: string;
 }
 
 export interface OperatorStats {

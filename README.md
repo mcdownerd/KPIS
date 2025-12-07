@@ -1,73 +1,71 @@
-# Welcome to your Lovable project
+# Planilha App Maker
 
-## Project info
+Aplicação de gerenciamento de lojas e produtos, desenvolvida com React, TypeScript, Vite e Supabase.
 
-**URL**: https://lovable.dev/projects/3db28979-0343-4ed3-8c4f-b55400f6668b
+## 🚀 Tecnologias
 
-## How can I edit this code?
+- **Frontend**: React, TypeScript, Vite
+- **UI**: shadcn/ui, Tailwind CSS
+- **Backend/Database**: Supabase
+- **State Management**: TanStack Query
+- **Icons**: Lucide React
 
-There are several ways of editing your application.
+## 🛠️ Configuração e Instalação
 
-**Use Lovable**
+### Pré-requisitos
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3db28979-0343-4ed3-8c4f-b55400f6668b) and start prompting.
+- Node.js (v18+)
+- npm ou yarn
 
-Changes made via Lovable will be committed automatically to this repo.
+### Instalação
 
-**Use your preferred IDE**
+1. Clone o repositório:
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd planilha-app-maker-main
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. Instale as dependências:
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. Configure as variáveis de ambiente:
+Crie um arquivo `.env` na raiz do projeto com as credenciais do Supabase:
+```env
+VITE_SUPABASE_URL=sua_url_supabase
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+```
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Inicie o servidor de desenvolvimento:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🔐 Permissões e Roles
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+O sistema possui 4 níveis de acesso:
 
-**Use GitHub Codespaces**
+1. **Admin**: Acesso total a todas as lojas e funcionalidades.
+2. **Supervisor**: Acesso total (exceto painel admin), visualiza todas as lojas.
+3. **Gerente**: Acesso restrito à sua loja, pode editar apenas datas.
+4. **User**: Acesso básico à sua loja (requer aprovação).
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Para mais detalhes sobre permissões, consulte [docs/PERMISSIONS.md](docs/PERMISSIONS.md).
 
-## What technologies are used for this project?
+## 📁 Estrutura do Projeto
 
-This project is built with:
+- `src/components`: Componentes reutilizáveis e de UI
+- `src/pages`: Páginas da aplicação
+- `src/hooks`: Custom hooks (auth, data fetching)
+- `src/lib`: Configurações de bibliotecas (Supabase, utils)
+- `src/types`: Definições de tipos TypeScript
+- `database/`: Scripts SQL para manutenção e migração
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🤝 Contribuição
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/3db28979-0343-4ed3-8c4f-b55400f6668b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Faça um Fork do projeto
+2. Crie uma Branch para sua Feature (`git checkout -b feature/AmazingFeature`)
+3. Faça o Commit de suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Faça o Push para a Branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request

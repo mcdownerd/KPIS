@@ -30,17 +30,20 @@ interface DeliveryDayFormProps {
 
 export const DeliveryDayForm = ({ day, initialData, onSave }: DeliveryDayFormProps) => {
   const { toast } = useToast();
-  const [manager, setManager] = useState("");
+  const [managerMorning, setManagerMorning] = useState("");
+  const [managerNight, setManagerNight] = useState("");
   const [morningShifts, setMorningShifts] = useState<DeliveryShift[]>([]);
   const [nightShifts, setNightShifts] = useState<DeliveryShift[]>([]);
 
   useEffect(() => {
     if (initialData) {
-      setManager(initialData.manager);
+      setManagerMorning(initialData.manager_morning);
+      setManagerNight(initialData.manager_night);
       setMorningShifts(initialData.morning_shifts);
       setNightShifts(initialData.night_shifts);
     } else {
-      setManager("");
+      setManagerMorning("");
+      setManagerNight("");
       setMorningShifts([]);
       setNightShifts([]);
     }
@@ -160,7 +163,8 @@ export const DeliveryDayForm = ({ day, initialData, onSave }: DeliveryDayFormPro
       day,
       morning_shifts: morningShifts,
       night_shifts: nightShifts,
-      manager,
+      manager_morning: managerMorning,
+      manager_night: managerNight,
     });
     toast({
       title: "Dados salvos",
@@ -217,14 +221,14 @@ export const DeliveryDayForm = ({ day, initialData, onSave }: DeliveryDayFormPro
 
                   {/* Diferença em destaque */}
                   <div className={`p-4 rounded-xl border bg-background/50 flex items-center justify-between ${shift.difference > 0 ? 'border-green-500/30 bg-green-500/5' :
-                      shift.difference < 0 ? 'border-red-500/30 bg-red-500/5' :
-                        'border-border'
+                    shift.difference < 0 ? 'border-red-500/30 bg-red-500/5' :
+                      'border-border'
                     }`}>
                     <div>
                       <Label className="text-xs text-muted-foreground uppercase">Diferença</Label>
                       <div className={`text-2xl font-bold font-mono ${shift.difference > 0 ? 'text-green-600 dark:text-green-400' :
-                          shift.difference < 0 ? 'text-red-600 dark:text-red-400' :
-                            'text-muted-foreground'
+                        shift.difference < 0 ? 'text-red-600 dark:text-red-400' :
+                          'text-muted-foreground'
                         }`}>
                         {shift.difference > 0 ? '+' : ''}€ {shift.difference.toFixed(2)}
                       </div>
@@ -393,23 +397,39 @@ export const DeliveryDayForm = ({ day, initialData, onSave }: DeliveryDayFormPro
       <Card className="p-6 bg-card/80 backdrop-blur-md border-border shadow-lg relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-primary/20" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
           <div>
             <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-1 block">Data Selecionada</Label>
             <div className="text-4xl font-black tracking-tighter text-foreground">
               Dia {day}
             </div>
           </div>
+
           <div className="relative group">
             <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-2 block transition-colors">
-              Gerente de Turno
+              Gerente Manhã
             </Label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors" />
               <Input
-                value={manager}
-                onChange={(e) => setManager(e.target.value)}
-                placeholder="Nome do gerente"
+                value={managerMorning}
+                onChange={(e) => setManagerMorning(e.target.value)}
+                placeholder="Gerente Manhã"
+                className="pl-12 h-14 bg-background/50 text-lg transition-all rounded-xl"
+              />
+            </div>
+          </div>
+
+          <div className="relative group">
+            <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-2 block transition-colors">
+              Gerente Noite
+            </Label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground transition-colors" />
+              <Input
+                value={managerNight}
+                onChange={(e) => setManagerNight(e.target.value)}
+                placeholder="Gerente Noite"
                 className="pl-12 h-14 bg-background/50 text-lg transition-all rounded-xl"
               />
             </div>

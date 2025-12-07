@@ -194,7 +194,8 @@ export async function getCashRegisterShiftsForComparison(monthsBack: number = 12
                 day,
                 morning_shifts: [],
                 night_shifts: [],
-                manager: shift.manager_name || ""
+                manager_morning: "",
+                manager_night: ""
             })
         }
 
@@ -216,11 +217,11 @@ export async function getCashRegisterShiftsForComparison(monthsBack: number = 12
 
         if (shift.shift_type === 'morning') {
             dayData.morning_shifts.push(uiShift)
+            if (shift.manager_name) dayData.manager_morning = shift.manager_name
         } else {
             dayData.night_shifts.push(uiShift)
+            if (shift.manager_name) dayData.manager_night = shift.manager_name
         }
-
-        if (shift.manager_name) dayData.manager = shift.manager_name
     })
 
     // Convert Maps to arrays

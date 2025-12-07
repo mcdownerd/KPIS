@@ -68,7 +68,8 @@ const DeliveryCashSheet = () => {
             day,
             morning_shifts: [],
             night_shifts: [],
-            manager: shift.manager_name || ""
+            manager_morning: "",
+            manager_night: ""
           });
         }
 
@@ -90,12 +91,11 @@ const DeliveryCashSheet = () => {
 
         if (shift.shift_type === 'morning') {
           dayData.morning_shifts.push(uiShift);
+          if (shift.manager_name) dayData.manager_morning = shift.manager_name;
         } else {
           dayData.night_shifts.push(uiShift);
+          if (shift.manager_name) dayData.manager_night = shift.manager_name;
         }
-
-        // Atualizar gerente se disponível (assumindo que é o mesmo para o dia ou pegando o último)
-        if (shift.manager_name) dayData.manager = shift.manager_name;
       });
 
       setMonthData(Array.from(daysMap.values()));
@@ -138,7 +138,7 @@ const DeliveryCashSheet = () => {
           reimbursement_qty: shift.reimbursement_qty,
           reimbursement_value: shift.reimbursement_value,
           reimbursement_note: shift.reimbursement_note,
-          manager_name: dayData.manager
+          manager_name: dayData.manager_morning
         });
       }
 
@@ -159,7 +159,7 @@ const DeliveryCashSheet = () => {
           reimbursement_qty: shift.reimbursement_qty,
           reimbursement_value: shift.reimbursement_value,
           reimbursement_note: shift.reimbursement_note,
-          manager_name: dayData.manager
+          manager_name: dayData.manager_night
         });
       }
 
