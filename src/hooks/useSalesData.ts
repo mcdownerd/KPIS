@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSalesByMonth, Sale } from '@/lib/api/sales'
+import { getSalesSummaryMetricsByDateRange } from '@/lib/api/service'
 import { toast } from 'sonner'
 
 interface MonthlySalesData {
@@ -22,10 +22,12 @@ export function useSalesData(year: number = new Date().getFullYear()) {
             setLoading(true)
             setError(null)
 
-            const sales = await getSalesByMonth(year)
+            const startDate = `${year}-01-01`
+            const endDate = `${year}-12-31`
+            const salesMetrics = await getSalesSummaryMetricsByDateRange(startDate, endDate)
 
-            // Group sales by month and platform
-            const monthlyData = processMonthlyData(sales)
+            // Group sales by month
+            const monthlyData = processMonthlyData(salesMetrics)
             setSalesData(monthlyData)
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados de vendas'
@@ -37,7 +39,7 @@ export function useSalesData(year: number = new Date().getFullYear()) {
         }
     }
 
-    const processMonthlyData = (sales: Sale[]): MonthlySalesData[] => {
+    const processMonthlyData = (metrics: any[]): MonthlySalesData[] => {
         const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
         // Initialize data for all months
@@ -48,16 +50,12 @@ export function useSalesData(year: number = new Date().getFullYear()) {
         }
 
         // Aggregate sales by month
-        sales.forEach(sale => {
-            const saleDate = new Date(sale.sale_date)
-            const monthIndex = saleDate.getMonth()
+        metrics.forEach(metric => {
+            const date = new Date(metric.record_date)
+            const monthIndex = date.getMonth()
 
-            if (sale.platform === 'Delivery') {
-                monthlyTotals[monthIndex].delivery += sale.total_value
-            }
-
-            // All platforms contribute to total sales
-            monthlyTotals[monthIndex].sales += sale.total_value
+            monthlyTotals[monthIndex].sales += Number(metric.total_sales || 0)
+            monthlyTotals[monthIndex].delivery += Number(metric.delivery_sales || 0)
         })
 
         // Convert to array format for chart

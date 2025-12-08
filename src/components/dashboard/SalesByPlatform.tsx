@@ -5,7 +5,7 @@ import { useSalesByPlatformData } from "@/hooks/useSalesByPlatformData";
 import { Loader2 } from "lucide-react";
 
 export function SalesByPlatform() {
-  const { platformData, salesByMonth, totalSales, loading } = useSalesByPlatformData();
+  const { platformData, salesByMonth, totalSales, totalAmadora, totalQueluz, loading } = useSalesByPlatformData();
 
   if (loading) {
     return (
@@ -70,26 +70,26 @@ export function SalesByPlatform() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Amadora</span>
-                <span className="text-2xl font-bold">€0.00</span>
+                <span className="text-2xl font-bold">€{(totalAmadora / 1000).toFixed(1)}K</span>
               </div>
               <div className="text-xs text-muted-foreground">
                 Delivery: 0% | Sala: 0% | MOP: 0%
               </div>
               <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: "0%" }} />
+                <div className="h-full bg-primary" style={{ width: totalSales > 0 ? `${(totalAmadora / totalSales) * 100}%` : "0%" }} />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Queluz</span>
-                <span className="text-2xl font-bold">€{(totalSales / 1000).toFixed(1)}K</span>
+                <span className="text-2xl font-bold">€{(totalQueluz / 1000).toFixed(1)}K</span>
               </div>
               <div className="text-xs text-muted-foreground">
                 Delivery: {deliveryPercent}% | Sala: {salaPercent}% | MOP: {mopPercent}%
               </div>
               <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
-                <div className="h-full bg-chart-2" style={{ width: "100%" }} />
+                <div className="h-full bg-chart-2" style={{ width: totalSales > 0 ? `${(totalQueluz / totalSales) * 100}%` : "0%" }} />
               </div>
             </div>
 

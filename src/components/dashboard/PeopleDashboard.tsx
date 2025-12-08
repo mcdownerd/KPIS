@@ -16,11 +16,19 @@ export function PeopleDashboard() {
     );
   }
 
-  // Get latest values for summary cards
-  const latestLabor = laborData[laborData.length - 1] || { mo: 0, prod: 0 };
-  const latestTurnover = turnoverData[turnoverData.length - 1] || { value: 0 };
-  const latestStaffing = staffingData[staffingData.length - 1] || { value: 0 };
-  const latestPerformance = performanceData[performanceData.length - 1] || { value: 0 };
+  // Get latest values for summary cards (excluding future months)
+  const today = new Date();
+  const currentMonthStr = today.toISOString().slice(0, 7); // YYYY-MM
+
+  const validLaborData = laborData.filter(d => d.rawDate <= today.toISOString());
+  const validTurnoverData = turnoverData.filter(d => d.rawDate <= today.toISOString());
+  const validStaffingData = staffingData.filter(d => d.rawDate <= today.toISOString());
+  const validPerformanceData = performanceData.filter(d => d.rawDate <= today.toISOString());
+
+  const latestLabor = validLaborData[validLaborData.length - 1] || { mo: 0, prod: 0 };
+  const latestTurnover = validTurnoverData[validTurnoverData.length - 1] || { value: 0 };
+  const latestStaffing = validStaffingData[validStaffingData.length - 1] || { value: 0 };
+  const latestPerformance = validPerformanceData[validPerformanceData.length - 1] || { value: 0 };
 
   return (
     <div className="space-y-6">
@@ -28,9 +36,9 @@ export function PeopleDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Custo Mão de Obra"
-          value={`€${latestLabor.mo.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+          value={`€${latestLabor.custo_total?.toLocaleString('pt-PT', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
           target="€30,000"
-          trend={latestLabor.mo <= 30000 ? "up" : "down"}
+          trend={(latestLabor.custo_total || 0) <= 30000 ? "up" : "down"}
           subtitle="Último mês"
         />
         <MetricCard
@@ -172,34 +180,56 @@ export function PeopleDashboard() {
             <TableHeader>
               <TableRow>
                 <TableHead>Mês</TableHead>
-                <TableHead className="text-right">Vendas</TableHead>
-                <TableHead className="text-right">Horas</TableHead>
-                <TableHead className="text-right">Produtividade</TableHead>
-                <TableHead className="text-right">MO %</TableHead>
-                <TableHead className="text-right">Turnover</TableHead>
-                <TableHead className="text-right">Staffing</TableHead>
+                <TableHead className="text-right">Vendas Amadora</TableHead>
+                <TableHead className="text-right">Horas Amadora</TableHead>
+                <TableHead className="text-right">Prod. Amadora</TableHead>
+                <TableHead className="text-right">Turnover Amadora</TableHead>
+                <TableHead className="text-right">Staffing Amadora</TableHead>
+
+                <TableHead className="text-right border-l pl-4">Vendas Queluz</TableHead>
+                <TableHead className="text-right">Horas Queluz</TableHead>
+                <TableHead className="text-right">Prod. Queluz</TableHead>
+                <TableHead className="text-right">Turnover Queluz</TableHead>
+                <TableHead className="text-right">Staffing Queluz</TableHead>
+
+                <TableHead className="text-right border-l pl-4 font-bold">Total Vendas</TableHead>
+                <TableHead className="text-right font-bold">Total Horas</TableHead>
+                <TableHead className="text-right font-bold">Prod. Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {laborData.map((item, index) => {
-                const turnover = turnoverData[index]?.value || 0;
-                const staffing = staffingData[index]?.value || 0;
+                const turnover = turnoverData[index];
+                const staffing = staffingData[index];
 
                 return (
                   <TableRow key={item.month}>
                     <TableCell className="font-medium">{item.month}</TableCell>
-                    <TableCell className="text-right">€{item.vendas.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{item.horas}</TableCell>
-                    <TableCell className="text-right">€{item.prod.toFixed(1)}</TableCell>
-                    <TableCell className="text-right">{item.mo.toFixed(1)}%</TableCell>
-                    <TableCell className="text-right">{turnover.toFixed(1)}%</TableCell>
-                    <TableCell className="text-right">{staffing.toFixed(0)}%</TableCell>
+
+                    {/* Amadora */}
+                    <TableCell className="text-right">€{item.vendas_amadora.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{item.horas_amadora.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">€{item.prod_amadora.toFixed(1)}</TableCell>
+                    <TableCell className="text-right">{turnover?.amadora?.toFixed(1)}%</TableCell>
+                    <TableCell className="text-right">{staffing?.amadora?.toFixed(0)}%</TableCell>
+
+                    {/* Queluz */}
+                    <TableCell className="text-right border-l pl-4">€{item.vendas_queluz.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{item.horas_queluz.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">€{item.prod_queluz.toFixed(1)}</TableCell>
+                    <TableCell className="text-right">{turnover?.queluz?.toFixed(1)}%</TableCell>
+                    <TableCell className="text-right">{staffing?.queluz?.toFixed(0)}%</TableCell>
+
+                    {/* Totals */}
+                    <TableCell className="text-right border-l pl-4 font-bold">€{item.vendas.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-bold">{item.horas.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-bold">€{item.prod.toFixed(1)}</TableCell>
                   </TableRow>
                 );
               })}
               {laborData.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={13} className="text-center py-4 text-muted-foreground">
                     Nenhum dado de RH disponível.
                   </TableCell>
                 </TableRow>

@@ -400,7 +400,33 @@ export function ServiceDataForm() {
       }
     }
     loadData();
+    loadData();
   }, [salesData.month, salesData.store]);
+
+  // Auto-calculate % Delivery and % MOP
+  useEffect(() => {
+    const total = parseFloat(salesData.totais);
+    const delivery = parseFloat(salesData.delivery);
+    const mop = parseFloat(salesData.mop);
+
+    if (!isNaN(total) && total > 0) {
+      // Calculate % Delivery
+      if (!isNaN(delivery)) {
+        const percentDel = ((delivery / total) * 100).toFixed(2);
+        if (percentDel !== salesData.percentDelivery) {
+          setSalesData(prev => ({ ...prev, percentDelivery: percentDel }));
+        }
+      }
+
+      // Calculate % MOP
+      if (!isNaN(mop)) {
+        const percentMop = ((mop / total) * 100).toFixed(2);
+        if (percentMop !== salesData.percentMop) {
+          setSalesData(prev => ({ ...prev, percentMop: percentMop }));
+        }
+      }
+    }
+  }, [salesData.totais, salesData.delivery, salesData.mop]);
 
 
   const handleServiceTimeSubmit = async (e: React.FormEvent) => {

@@ -15,7 +15,8 @@ import { MonthlyData, ElectricityReading, WaterReading } from "@/types/utilities
 import { calculateDailyCosts, formatCurrency, electricityRates } from "@/utils/utilitiesCalculations";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { getUtilitiesByMonth, upsertUtilityReading, Utility } from "@/lib/api/utilities";
+import { getUtilitiesByMonth, getUtilitiesForComparison, upsertUtilityReading, Utility } from "@/lib/api/utilities";
+import { upsertHRMetric, getHRMetricsByType } from "@/lib/api/hr";
 
 const months = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -30,6 +31,8 @@ export default function Utilities() {
   const [waterPricePerM3, setWaterPricePerM3] = useState(0.70);
   const [loading, setLoading] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  const [comparisonData, setComparisonData] = useState<Record<string, MonthlyData>>({});
+  const [loadingComparison, setLoadingComparison] = useState(false);
 
   // Estado local para a UI
   const [currentMonthData, setCurrentMonthData] = useState<MonthlyData>({
@@ -67,17 +70,30 @@ export default function Utilities() {
     }
   }, [selectedMonth, user]);
 
+  // Carregar dados de comparação quando o modal abre
+  useEffect(() => {
+    if (showComparison && user) {
+      loadComparisonData();
+    }
+  }, [showComparison, user]);
+
   const loadMonthData = async (month: number) => {
     setLoading(true);
     try {
       const utilities = await getUtilitiesByMonth(month, 2025);
 
+      // Fetch managers
+      const startDate = `2025-${(month + 1).toString().padStart(2, '0')}-01`;
+      const endDate = `2025-${(month + 1).toString().padStart(2, '0')}-31`; // Simple approximation
+      const managersMetrics = await getHRMetricsByType('managers', startDate, endDate);
+      const managersData = managersMetrics[0]?.additional_data || {};
+
       // Transformar dados do Supabase para o formato da UI
       const newMonthData: MonthlyData = {
         month: month,
         year: 2025,
-        managerMorning: "", // TODO: Persistir gerentes se necessário
-        managerNight: "",
+        managerMorning: managersData.manager_morning || "",
+        managerNight: managersData.manager_night || "",
         electricityReadings: Array.from({ length: 31 }, (_, i) => {
           const day = i + 1;
           const dateStr = `2025-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -110,6 +126,92 @@ export default function Utilities() {
       toast.error("Erro ao carregar dados de consumo.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManagerChange = async (field: 'managerMorning' | 'managerNight', value: string) => {
+    setCurrentMonthData(prev => ({ ...prev, [field]: value }));
+
+    try {
+      const recordDate = `2025-${(selectedMonth + 1).toString().padStart(2, '0')}-01`;
+
+      // We need to send both managers to avoid overwriting with empty if we only send one
+      // So we use the latest state value for the changed field and current state for the other
+      const morning = field === 'managerMorning' ? value : currentMonthData.managerMorning;
+      const night = field === 'managerNight' ? value : currentMonthData.managerNight;
+
+      await upsertHRMetric({
+        record_date: recordDate,
+        metric_type: 'managers',
+        value: 0,
+        additional_data: {
+          manager_morning: morning,
+          manager_night: night
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao salvar gerente:", error);
+    }
+  };
+
+  const loadComparisonData = async () => {
+    setLoadingComparison(true);
+    try {
+      const year = 2025;
+      const utilities = await getUtilitiesForComparison(year);
+      const processedData: Record<string, MonthlyData> = {};
+
+      // Processar dados para cada mês
+      for (let m = 0; m < 12; m++) {
+        const monthKey = `${year}-${m}`;
+
+        // Filtrar utilitários deste mês
+        const monthUtilities = utilities.filter(u => {
+          const date = new Date(u.reading_date);
+          return date.getMonth() === m && date.getFullYear() === year;
+        });
+
+        // Se não houver dados, pular (ou criar vazio se quiser mostrar meses vazios)
+        if (monthUtilities.length === 0) continue;
+
+        processedData[monthKey] = {
+          month: m,
+          year: year,
+          managerMorning: "",
+          managerNight: "",
+          electricityReadings: Array.from({ length: 31 }, (_, i) => {
+            const day = i + 1;
+            const dateStr = `${year}-${(m + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+            const vazia = monthUtilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_vazia')?.reading_value || null;
+            const ponta = monthUtilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_ponta')?.reading_value || null;
+            const cheia = monthUtilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_cheia')?.reading_value || null;
+            const sVazia = monthUtilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_svazia')?.reading_value || null;
+
+            return { day, vazia, ponta, cheia, sVazia };
+          }),
+          waterReadings: Array.from({ length: 31 }, (_, i) => {
+            const day = i + 1;
+            const dateStr = `${year}-${(m + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            const reading = monthUtilities.find(u => u.reading_date === dateStr && u.utility_type === 'water')?.reading_value || null;
+
+            return {
+              day,
+              reading,
+              m3Used: 0,
+              euroSpent: 0
+            };
+          }),
+          waterPricePerM3: waterPricePerM3,
+        };
+      }
+
+      setComparisonData(processedData);
+    } catch (error) {
+      console.error("Erro ao carregar dados de comparação:", error);
+      toast.error("Erro ao carregar dados para comparação.");
+    } finally {
+      setLoadingComparison(false);
     }
   };
 
@@ -199,8 +301,7 @@ export default function Utilities() {
             <p className="text-muted-foreground mt-2">Gestão de consumos e custos - 2025</p>
           </div>
 
-          {/* TODO: Reimplementar comparação de meses com dados reais */}
-          {/* <Dialog open={showComparison} onOpenChange={setShowComparison}>
+          <Dialog open={showComparison} onOpenChange={setShowComparison}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <TrendingUp className="h-4 w-4" />
@@ -211,9 +312,15 @@ export default function Utilities() {
               <DialogHeader>
                 <DialogTitle>Comparação entre Meses</DialogTitle>
               </DialogHeader>
-              <MonthComparison allMonthsData={{}} months={months} />
+              {loadingComparison ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <MonthComparison allMonthsData={comparisonData} months={months} />
+              )}
             </DialogContent>
-          </Dialog> */}
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -247,9 +354,7 @@ export default function Utilities() {
             <CardContent>
               <Input
                 value={currentMonthData.managerMorning}
-                onChange={(e) =>
-                  setCurrentMonthData((prev) => ({ ...prev, managerMorning: e.target.value }))
-                }
+                onChange={(e) => handleManagerChange('managerMorning', e.target.value)}
                 placeholder="1º nome"
               />
             </CardContent>
@@ -262,9 +367,7 @@ export default function Utilities() {
             <CardContent>
               <Input
                 value={currentMonthData.managerNight}
-                onChange={(e) =>
-                  setCurrentMonthData((prev) => ({ ...prev, managerNight: e.target.value }))
-                }
+                onChange={(e) => handleManagerChange('managerNight', e.target.value)}
                 placeholder="1º nome"
               />
             </CardContent>

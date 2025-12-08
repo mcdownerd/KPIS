@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { upsertHRMetric } from "@/lib/api/hr";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,8 @@ interface MonthlyData {
   vendas32: string;
   horas20: string;
   horas32: string;
+  moPercentage20: string;
+  moPercentage32: string;
   turnoverAmadora: string;
   turnoverQueluz: string;
   horasExtraAmadora: string;
@@ -63,8 +66,103 @@ export const PeopleDataForm = () => {
     }));
   };
 
-  const handleSave = () => {
-    toast.success(`Dados de ${selectedMonth} salvos com sucesso!`);
+  const handleSave = async () => {
+    try {
+      const year = 2025;
+      const monthIndex = months.indexOf(selectedMonth);
+      // Create date as YYYY-MM-01
+      const recordDate = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`;
+
+      // 1. Save Labor Cost Data (Vendas & Horas & Custos)
+      // Amadora (20)
+      const vendas20 = parseFloat(currentMonthData.vendas20?.replace(/[^0-9.-]+/g, "") || "0");
+      const horas20 = parseFloat(currentMonthData.horas20 || "0");
+      const moPercentage20 = parseFloat(currentMonthData.moPercentage20 || "0");
+      const custoMO20 = vendas20 * (moPercentage20 / 100);
+
+      // Queluz (32)
+      const vendas32 = parseFloat(currentMonthData.vendas32?.replace(/[^0-9.-]+/g, "") || "0");
+      const horas32 = parseFloat(currentMonthData.horas32 || "0");
+      const moPercentage32 = parseFloat(currentMonthData.moPercentage32 || "0");
+      const custoMO32 = vendas32 * (moPercentage32 / 100);
+
+      // Calculate totals for labor cost metric
+      const totalVendas = vendas20 + vendas32;
+      const totalHoras = horas20 + horas32;
+      const totalCustoMO = custoMO20 + custoMO32;
+
+      const productivity = totalHoras > 0 ? totalVendas / totalHoras : 0;
+      const moPercentage = totalVendas > 0 ? (totalCustoMO / totalVendas) * 100 : 0;
+
+      await upsertHRMetric({
+        record_date: recordDate,
+        metric_type: 'labor_cost',
+        value: totalCustoMO, // Saving Total Cost in Euros as the main value
+        additional_data: {
+          vendas: totalVendas,
+          horas: totalHoras,
+          prod: productivity,
+          mo: moPercentage, // Saving Percentage in additional data
+          vendas_amadora: vendas20,
+          horas_amadora: horas20,
+          vendas_queluz: vendas32,
+          horas_queluz: horas32,
+          custo_amadora: custoMO20,
+          custo_queluz: custoMO32,
+          mo_percentage: moPercentage
+        }
+      });
+
+      // 2. Save Turnover Data
+      const turnoverAmadora = parseFloat(currentMonthData.turnoverAmadora || "0");
+      const turnoverQueluz = parseFloat(currentMonthData.turnoverQueluz || "0");
+      const avgTurnover = (turnoverAmadora + turnoverQueluz) / 2; // Simple average for now
+
+      await upsertHRMetric({
+        record_date: recordDate,
+        metric_type: 'turnover_rate',
+        value: avgTurnover,
+        target_value: 2.0, // Default target
+        additional_data: {
+          amadora: turnoverAmadora,
+          queluz: turnoverQueluz
+        }
+      });
+
+      // 3. Save Staffing Data
+      const staffingAmadora = parseFloat(currentStaffingData.totalAmadora || "0");
+      const staffingQueluz = parseFloat(currentStaffingData.totalQueluz || "0");
+      const avgStaffing = (staffingAmadora + staffingQueluz) / 2;
+
+      await upsertHRMetric({
+        record_date: recordDate,
+        metric_type: 'staffing', // Using 'staffing' for percentage
+        value: avgStaffing,
+        target_value: 100,
+        additional_data: {
+          amadora: staffingAmadora,
+          queluz: staffingQueluz
+        }
+      });
+
+      // Also save staffing hours if we can derive them, or just use the same metric type if dashboard handles it.
+      // The dashboard uses 'staffing_hours' for the summary card (2000h).
+      // We don't have an input for "Total Staffing Hours" in the form, only percentages.
+      // We'll skip 'staffing_hours' for now or maybe the dashboard should use 'staffing' percentage.
+
+      // 4. Save Productivity (Performance)
+      await upsertHRMetric({
+        record_date: recordDate,
+        metric_type: 'productivity',
+        value: productivity,
+        target_value: 45, // Example target
+      });
+
+      toast.success(`Dados de ${selectedMonth} salvos com sucesso!`);
+    } catch (error) {
+      console.error('Error saving HR data:', error);
+      toast.error('Erro ao salvar dados.');
+    }
   };
 
   const calculateProductivity = (vendas: string, horas: string) => {
@@ -81,6 +179,8 @@ export const PeopleDataForm = () => {
     vendas32: "",
     horas20: "",
     horas32: "",
+    moPercentage20: "",
+    moPercentage32: "",
     turnoverAmadora: "",
     turnoverQueluz: "",
     horasExtraAmadora: "",
@@ -90,7 +190,7 @@ export const PeopleDataForm = () => {
     cedenciaQueluz: "",
     justificacaoCedencia: ""
   };
-  
+
   const currentStaffingData: StaffingData = staffingData[selectedMonth] || {
     totalAmadora: "",
     almocoAmadora: "",
@@ -157,6 +257,16 @@ export const PeopleDataForm = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>M.O. (%)</Label>
+                  <Input
+                    type="number"
+                    placeholder="7.0"
+                    step="0.1"
+                    value={currentMonthData.moPercentage20 || ""}
+                    onChange={(e) => handleMonthlyDataChange("moPercentage20", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Produtividade (calculada)</Label>
                   <Input
                     type="text"
@@ -185,6 +295,16 @@ export const PeopleDataForm = () => {
                     placeholder="2425.12"
                     value={currentMonthData.horas32 || ""}
                     onChange={(e) => handleMonthlyDataChange("horas32", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>M.O. (%)</Label>
+                  <Input
+                    type="number"
+                    placeholder="7.8"
+                    step="0.1"
+                    value={currentMonthData.moPercentage32 || ""}
+                    onChange={(e) => handleMonthlyDataChange("moPercentage32", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">

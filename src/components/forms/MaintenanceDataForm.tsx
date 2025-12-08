@@ -151,14 +151,19 @@ export const MaintenanceDataForm = () => {
     }
   };
 
-  const currentUtilityData: UtilityData = utilityData[selectedMonth] || {
+  const defaultUtilityData: UtilityData = {
     aguaAmadora: "",
     eletricidadeAmadora: "",
     aguaQueluz: "",
     eletricidadeQueluz: ""
   };
 
-  const currentOpsData: OpsData = opsData[selectedMonth] || {
+  const currentUtilityData: UtilityData = {
+    ...defaultUtilityData,
+    ...utilityData[selectedMonth]
+  };
+
+  const defaultOpsData: OpsData = {
     easyWashAmadora: "",
     easyWashQueluz: "",
     apcAmadora: "",
@@ -171,13 +176,23 @@ export const MaintenanceDataForm = () => {
     sabaoLiquidoQueluz: ""
   };
 
-  const currentPerformanceData: PerformanceData = performanceData[selectedMonth] || {
+  const currentOpsData: OpsData = {
+    ...defaultOpsData,
+    ...opsData[selectedMonth]
+  };
+
+  const defaultPerformanceData: PerformanceData = {
     cmpAmadora: "",
     plAmadora: "",
     avaliacoesAmadora: "",
     cmpQueluz: "",
     plQueluz: "",
     avaliacoesQueluz: ""
+  };
+
+  const currentPerformanceData: PerformanceData = {
+    ...defaultPerformanceData,
+    ...performanceData[selectedMonth]
   };
 
   return (

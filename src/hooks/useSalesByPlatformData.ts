@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSalesByDateRange, Sale } from '@/lib/api/sales';
+import { getSalesSummaryMetricsByDateRange, getAllSalesSummaryMetricsByDateRange } from '@/lib/api/service';
 import { useToast } from './use-toast';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,13 +25,16 @@ export function useSalesByPlatformData() {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
 
+    const [totalAmadora, setTotalAmadora] = useState(0);
+    const [totalQueluz, setTotalQueluz] = useState(0);
+
     useEffect(() => {
         async function fetchSales() {
             try {
-                // Fetch data for the whole year of 2025
+                // Fetch data for the whole year of 2025 for ALL stores
                 const startDate = '2025-01-01';
                 const endDate = '2025-12-31';
-                const data = await getSalesByDateRange(startDate, endDate);
+                const data = await getAllSalesSummaryMetricsByDateRange(startDate, endDate);
 
                 processSalesData(data);
             } catch (error) {
@@ -49,16 +52,34 @@ export function useSalesByPlatformData() {
         fetchSales();
     }, [toast]);
 
-    const processSalesData = (sales: Sale[]) => {
+    const processSalesData = (salesMetrics: any[]) => {
         // 1. Process Platform Data (Pie Chart)
-        const platformSummary = sales.reduce((acc, sale) => {
-            const platform = sale.platform;
-            acc[platform] = (acc[platform] || 0) + Number(sale.total_value);
-            return acc;
-        }, {} as Record<string, number>);
+        // Aggregate totals from all monthly records
+        let totalDelivery = 0;
+        let totalSala = 0;
+        let totalMop = 0;
+        let grandTotal = 0;
 
-        const total = Object.values(platformSummary).reduce((sum, val) => sum + val, 0);
-        setTotalSales(total);
+        // Store totals
+        let amadoraSum = 0;
+        let queluzSum = 0;
+
+        salesMetrics.forEach(metric => {
+            totalDelivery += Number(metric.delivery || 0);
+            totalSala += Number(metric.sala || 0);
+            totalMop += Number(metric.mop || 0);
+            grandTotal += Number(metric.totais || 0);
+
+            if (metric.store_id === 'fcf80b5a-b658-48f3-871c-ac62120c5a78') { // Queluz
+                queluzSum += Number(metric.totais || 0);
+            } else if (metric.store_id === 'f86b0b1f-05d0-4310-a655-a92ca1ab68bf') { // Amadora
+                amadoraSum += Number(metric.totais || 0);
+            }
+        });
+
+        setTotalSales(grandTotal);
+        setTotalAmadora(amadoraSum);
+        setTotalQueluz(queluzSum);
 
         const processedPlatformData: PlatformData[] = [
             { name: 'Delivery', value: 0, color: '#0088FE' },
@@ -66,12 +87,11 @@ export function useSalesByPlatformData() {
             { name: 'MOP', value: 0, color: '#FFBB28' },
         ];
 
-        processedPlatformData.forEach(item => {
-            if (platformSummary[item.name]) {
-                // Calculate percentage
-                item.value = Number(((platformSummary[item.name] / total) * 100).toFixed(1));
-            }
-        });
+        if (grandTotal > 0) {
+            processedPlatformData[0].value = Number(((totalDelivery / grandTotal) * 100).toFixed(1));
+            processedPlatformData[1].value = Number(((totalSala / grandTotal) * 100).toFixed(1));
+            processedPlatformData[2].value = Number(((totalMop / grandTotal) * 100).toFixed(1));
+        }
 
         // Filter out platforms with 0 sales if desired, or keep them to show 0%
         setPlatformData(processedPlatformData.filter(item => item.value > 0));
@@ -91,28 +111,29 @@ export function useSalesByPlatformData() {
             };
         });
 
-        sales.forEach(sale => {
-            const date = parseISO(sale.sale_date);
-            const monthName = format(date, 'MMMM', { locale: ptBR });
-            // Capitalize first letter
-            const formattedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+        salesMetrics.forEach(metric => {
+            const monthName = metric.month_name;
 
-            if (monthlyData[formattedMonth]) {
-                // Assuming current user is Queluz for now based on test data
-                // In a real multi-store scenario, we would check sale.store_id
-                monthlyData[formattedMonth].queluzTotal += Number(sale.total_value);
-                if (sale.platform === 'Delivery') {
-                    monthlyData[formattedMonth].queluzDelivery += Number(sale.total_value);
+            if (monthlyData[monthName]) {
+                // Determine store based on store_id
+                // Amadora: f86b0b1f-05d0-4310-a655-a92ca1ab68bf
+                // Queluz: fcf80b5a-b658-48f3-871c-ac62120c5a78
+
+                if (metric.store_id === 'fcf80b5a-b658-48f3-871c-ac62120c5a78') { // Queluz
+                    monthlyData[monthName].queluzTotal += Number(metric.totais || 0);
+                    monthlyData[monthName].queluzDelivery += Number(metric.delivery || 0);
+                } else if (metric.store_id === 'f86b0b1f-05d0-4310-a655-a92ca1ab68bf') { // Amadora
+                    monthlyData[monthName].amadoraTotal += Number(metric.totais || 0);
+                    monthlyData[monthName].amadoraDelivery += Number(metric.delivery || 0);
                 }
             }
         });
 
-        // Convert to array and filter out months with no data (optional, or keep all)
-        // Let's keep only months up to current date or months with data
+        // Convert to array and filter out months with no data
         const sortedMonthlyData = Object.values(monthlyData).filter(m => m.queluzTotal > 0 || m.amadoraTotal > 0);
 
         setSalesByMonth(sortedMonthlyData);
     };
 
-    return { platformData, salesByMonth, totalSales, loading };
+    return { platformData, salesByMonth, totalSales, totalAmadora, totalQueluz, loading };
 }

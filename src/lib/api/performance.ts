@@ -211,3 +211,26 @@ export async function getMonthlyPerformanceTracking(year: number) {
         taxa: item.total > 0 ? `${Math.round((item.total_ok / item.total) * 100)}%` : '0%'
     }))
 }
+/**
+ * Clear all performance tracking records for the current store
+ */
+export async function clearAllPerformanceTracking() {
+    const { data: profile } = await supabase.auth.getUser()
+    if (!profile.user) throw new Error('User not authenticated')
+
+    const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('store_id')
+        .eq('id', profile.user.id)
+        .single()
+
+    if (!userProfile?.store_id) throw new Error('User has no store assigned')
+
+    const { error } = await supabase
+        .from('performance_tracking')
+        .delete()
+        .eq('store_id', userProfile.store_id)
+
+    if (error) throw error
+    return true
+}

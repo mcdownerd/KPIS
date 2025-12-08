@@ -190,3 +190,26 @@ export async function getMaintenanceSummary(startDate: string, endDate: string) 
 export async function getPendingMaintenance() {
     return getMaintenanceByStatus('pending')
 }
+/**
+ * Clear all maintenance records for the current store
+ */
+export async function clearAllMaintenance() {
+    const { data: profile } = await supabase.auth.getUser()
+    if (!profile.user) throw new Error('User not authenticated')
+
+    const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('store_id')
+        .eq('id', profile.user.id)
+        .single()
+
+    if (!userProfile?.store_id) throw new Error('User has no store assigned')
+
+    const { error } = await supabase
+        .from('maintenance')
+        .delete()
+        .eq('store_id', userProfile.store_id)
+
+    if (error) throw error
+    return true
+}

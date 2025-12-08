@@ -25,17 +25,28 @@ export interface CashRegisterShift {
 /**
  * Fetch cash register shifts for a specific month
  */
-export async function getCashRegisterShiftsByMonth(month: number, year: number) {
+/**
+ * Fetch cash register shifts for a specific month
+ */
+export async function getCashRegisterShiftsByMonth(month: number, year: number, storeId?: string) {
     const { data: profile } = await supabase.auth.getUser()
     if (!profile.user) throw new Error('User not authenticated')
 
     const { data: userProfile } = await supabase
         .from('user_profiles')
-        .select('store_id')
+        .select('store_id, role')
         .eq('id', profile.user.id)
         .single()
 
-    if (!userProfile?.store_id) return []
+    // Determine which store ID to use
+    let targetStoreId = userProfile?.store_id;
+
+    // If user is admin or supervisor AND a storeId was passed, use that instead
+    if ((userProfile?.role === 'admin' || userProfile?.role === 'supervisor') && storeId) {
+        targetStoreId = storeId;
+    }
+
+    if (!targetStoreId) return []
 
     const startDate = new Date(year, month, 1).toISOString().split('T')[0]
     const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
@@ -43,7 +54,7 @@ export async function getCashRegisterShiftsByMonth(month: number, year: number) 
     const { data, error } = await supabase
         .from('cash_register_shifts')
         .select('*')
-        .eq('store_id', userProfile.store_id)
+        .eq('store_id', targetStoreId)
         .gte('shift_date', startDate)
         .lte('shift_date', endDate)
 
@@ -54,27 +65,31 @@ export async function getCashRegisterShiftsByMonth(month: number, year: number) 
 /**
  * Upsert a cash register shift
  */
-export async function upsertCashRegisterShift(shift: Omit<CashRegisterShift, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'store_id'> & { id?: string }) {
+export async function upsertCashRegisterShift(shift: Omit<CashRegisterShift, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'store_id'> & { id?: string }, storeId?: string) {
     const { data: profile } = await supabase.auth.getUser()
     if (!profile.user) throw new Error('User not authenticated')
 
     const { data: userProfile } = await supabase
         .from('user_profiles')
-        .select('store_id')
+        .select('store_id, role')
         .eq('id', profile.user.id)
         .single()
 
-    if (!userProfile?.store_id) throw new Error('User has no store assigned')
+    // Determine which store ID to use
+    let targetStoreId = userProfile?.store_id;
+
+    // If user is admin or supervisor AND a storeId was passed, use that instead
+    if ((userProfile?.role === 'admin' || userProfile?.role === 'supervisor') && storeId) {
+        targetStoreId = storeId;
+    }
+
+    if (!targetStoreId) throw new Error('No store assigned or selected')
 
     const shiftData = {
         ...shift,
-        store_id: userProfile.store_id,
+        store_id: targetStoreId,
         created_by: profile.user.id
     }
-
-    // If ID is provided, update. If not, insert.
-    // However, for upserting based on logic, we might want to match by date/type/operator if ID is missing?
-    // For now, let's assume the UI handles IDs or we insert new.
 
     if (shift.id) {
         const { data, error } = await supabase
@@ -103,7 +118,6 @@ export async function upsertCashRegisterShift(shift: Omit<CashRegisterShift, 'id
         if (error) throw error
         return data
     } else {
-        // For INSERT, don't include id field - let database generate it
         const { data, error } = await supabase
             .from('cash_register_shifts')
             .insert([{
@@ -149,17 +163,25 @@ export async function deleteCashRegisterShift(id: string) {
  * Fetch cash register shifts for multiple months for comparison
  * Returns data structured as Record<"YYYY-MM", DeliveryDay[]>
  */
-export async function getCashRegisterShiftsForComparison(monthsBack: number = 12) {
+export async function getCashRegisterShiftsForComparison(monthsBack: number = 12, storeId?: string) {
     const { data: profile } = await supabase.auth.getUser()
     if (!profile.user) throw new Error('User not authenticated')
 
     const { data: userProfile } = await supabase
         .from('user_profiles')
-        .select('store_id')
+        .select('store_id, role')
         .eq('id', profile.user.id)
         .single()
 
-    if (!userProfile?.store_id) return {}
+    // Determine which store ID to use
+    let targetStoreId = userProfile?.store_id;
+
+    // If user is admin or supervisor AND a storeId was passed, use that instead
+    if ((userProfile?.role === 'admin' || userProfile?.role === 'supervisor') && storeId) {
+        targetStoreId = storeId;
+    }
+
+    if (!targetStoreId) return {}
 
     // Calculate date range for the last N months
     const endDate = new Date()
@@ -169,7 +191,7 @@ export async function getCashRegisterShiftsForComparison(monthsBack: number = 12
     const { data, error } = await supabase
         .from('cash_register_shifts')
         .select('*')
-        .eq('store_id', userProfile.store_id)
+        .eq('store_id', targetStoreId)
         .gte('shift_date', startDate.toISOString().split('T')[0])
         .lte('shift_date', endDate.toISOString().split('T')[0])
         .order('shift_date', { ascending: true })

@@ -79,6 +79,7 @@ export function useAuth() {
     const isSupervisor = profile?.role === 'supervisor'
     const canAccessAdmin = isAdmin || isManager
     const hasStore = !!profile?.store_id
+    const isAdminOrSupervisor = isAdmin || isSupervisor
 
     return {
         user,
@@ -87,6 +88,7 @@ export function useAuth() {
         isAdmin,
         isManager,
         isSupervisor,
+        isAdminOrSupervisor,
         canAccessAdmin,
         hasStore,
         refetch: async () => {

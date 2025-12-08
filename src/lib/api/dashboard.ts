@@ -41,23 +41,23 @@ export async function getDashboardMetrics(startDate: string, endDate: string): P
         }
     }
 
-    // Fetch sales data
-    const { data: sales } = await supabase
-        .from('sales')
-        .select('total_value, platform')
-        .eq('store_id', userProfile.store_id)
-        .gte('sale_date', startDate)
-        .lte('sale_date', endDate)
-
-    // Fetch service times
-    const { data: serviceTimes } = await supabase
-        .from('service_times')
-        .select('day_time, delivery_time')
+    // Fetch sales summary metrics
+    const { data: salesMetrics } = await supabase
+        .from('sales_summary_metrics')
+        .select('*')
         .eq('store_id', userProfile.store_id)
         .gte('record_date', startDate)
         .lte('record_date', endDate)
 
-    // Fetch costs
+    // Fetch service time metrics
+    const { data: serviceMetrics } = await supabase
+        .from('service_time_metrics')
+        .select('*')
+        .eq('store_id', userProfile.store_id)
+        .gte('record_date', startDate)
+        .lte('record_date', endDate)
+
+    // Fetch costs (legacy or new?) - Keeping legacy for now as MaintenanceForm is incomplete
     const { data: costs } = await supabase
         .from('costs')
         .select('percentage')
@@ -93,10 +93,20 @@ export async function getDashboardMetrics(startDate: string, endDate: string): P
         .gte('record_date', startDate)
         .lte('record_date', endDate)
 
-    // Calculate metrics
-    const totalSales = sales?.reduce((sum, s) => sum + Number(s.total_value), 0) || 0
-    const deliverySales = sales?.filter(s => s.platform === 'Delivery').reduce((sum, s) => sum + Number(s.total_value), 0) || 0
-    const avgServiceTime = serviceTimes?.length ? serviceTimes.reduce((sum, st) => sum + (st.day_time || 0), 0) / serviceTimes.length : 0
+    // Calculate metrics from sales_summary_metrics
+    const totalSales = salesMetrics?.reduce((sum, s) => sum + Number(s.total_sales || 0), 0) || 0
+    const deliverySales = salesMetrics?.reduce((sum, s) => sum + Number(s.delivery_sales || 0), 0) || 0
+
+    // Calculate metrics from service_time_metrics
+    // Average of averages might not be mathematically perfect but sufficient for dashboard overview
+    const avgServiceTime = serviceMetrics?.length
+        ? serviceMetrics.reduce((sum, st) => sum + (st.service_time_avg || 0), 0) / serviceMetrics.length
+        : 0
+
+    const avgDeliveryTime = serviceMetrics?.length
+        ? serviceMetrics.reduce((sum, st) => sum + (st.delivery_time_avg || 0), 0) / serviceMetrics.length
+        : 0;
+
     const avgCost = costs?.length ? costs.reduce((sum, c) => sum + Number(c.percentage), 0) / costs.length : 0
     const deviationCount = deviations?.length || 0
 
@@ -107,16 +117,11 @@ export async function getDashboardMetrics(startDate: string, endDate: string): P
     const rating = performance?.find(p => p.metric_name === 'Avaliações Google')?.value || 0;
     const fastinsight = performance?.find(p => p.metric_name === 'Fastinsight')?.value || 0;
 
-    // Calculate delivery time average
-    const avgDeliveryTime = serviceTimes?.length
-        ? serviceTimes.reduce((sum, st) => sum + (st.delivery_time || 0), 0) / serviceTimes.length
-        : 0;
-
     // Calculate delivery percentage
     const deliveryPercentage = totalSales > 0 ? (deliverySales / totalSales) * 100 : 0;
 
     let salesGrowth = 0;
-    if (sales && sales.length > 0) {
+    if (salesMetrics && salesMetrics.length > 0) {
         salesGrowth = 12.5; // Hardcoded for demo
     }
 

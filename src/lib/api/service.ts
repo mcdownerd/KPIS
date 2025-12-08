@@ -297,3 +297,34 @@ export async function getSalesSummaryMetrics(month: string, storeId?: string) {
     if (error) throw error
     return data
 }
+
+export async function getSalesSummaryMetricsByDateRange(startDate: string, endDate: string) {
+    const { user, store_id } = await getUserStore()
+
+    const { data, error } = await supabase
+        .from('sales_summary_metrics')
+        .select('*')
+        .eq('store_id', store_id)
+        .gte('record_date', startDate)
+        .lte('record_date', endDate)
+        .order('record_date', { ascending: true })
+
+    if (error) throw error
+    return data || []
+}
+
+export async function getAllSalesSummaryMetricsByDateRange(startDate: string, endDate: string) {
+    const { data: profile } = await supabase.auth.getUser()
+    if (!profile.user) throw new Error('User not authenticated')
+
+    // Fetch for all stores, no store_id filter
+    const { data, error } = await supabase
+        .from('sales_summary_metrics')
+        .select('*')
+        .gte('record_date', startDate)
+        .lte('record_date', endDate)
+        .order('record_date', { ascending: true })
+
+    if (error) throw error
+    return data || []
+}

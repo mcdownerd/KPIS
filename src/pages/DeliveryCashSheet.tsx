@@ -6,6 +6,7 @@ import { DeliveryDayForm } from "@/components/delivery/DeliveryDayForm";
 import { OperatorAnalysis } from "@/components/delivery/OperatorAnalysis";
 import { RestaurantAverage } from "@/components/delivery/RestaurantAverage";
 import { MonthComparison } from "@/components/delivery/MonthComparison";
+import { StoreSelector } from "@/components/dashboard/StoreSelector";
 import { DeliveryDay, DeliveryShift } from "@/types/delivery";
 import { useAuth } from "@/hooks/useAuth";
 import { getCashRegisterShiftsByMonth, upsertCashRegisterShift, getCashRegisterShiftsForComparison, CashRegisterShift } from "@/lib/api/cash_register";
@@ -20,7 +21,7 @@ const MONTHS = [
 ];
 
 const DeliveryCashSheet = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const currentDate = new Date();
@@ -28,6 +29,7 @@ const DeliveryCashSheet = () => {
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
   const [loading, setLoading] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
   // Estado local formatado para a UI
   const [monthData, setMonthData] = useState<DeliveryDay[]>([]);
@@ -39,22 +41,31 @@ const DeliveryCashSheet = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Inicializa a loja selecionada com a loja do usuário
   useEffect(() => {
-    if (user) {
+    if (profile?.store_id && !selectedStoreId) {
+      setSelectedStoreId(profile.store_id);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (user && selectedStoreId) {
       loadMonthData();
     }
-  }, [selectedMonth, selectedYear, user]);
+  }, [selectedMonth, selectedYear, user, selectedStoreId]);
 
   useEffect(() => {
-    if (user) {
+    if (user && selectedStoreId) {
       loadComparisonData();
     }
-  }, [user]);
+  }, [user, selectedStoreId]);
 
   const loadMonthData = async () => {
+    if (!selectedStoreId) return;
+
     setLoading(true);
     try {
-      const shifts = await getCashRegisterShiftsByMonth(selectedMonth, selectedYear);
+      const shifts = await getCashRegisterShiftsByMonth(selectedMonth, selectedYear, selectedStoreId);
 
       // Agrupar shifts por dia
       const daysMap = new Map<number, DeliveryDay>();
@@ -108,8 +119,10 @@ const DeliveryCashSheet = () => {
   };
 
   const loadComparisonData = async () => {
+    if (!selectedStoreId) return;
+
     try {
-      const data = await getCashRegisterShiftsForComparison(12);
+      const data = await getCashRegisterShiftsForComparison(12, selectedStoreId);
       setComparisonData(data);
     } catch (error) {
       console.error("Erro ao carregar dados de comparação:", error);
@@ -118,6 +131,11 @@ const DeliveryCashSheet = () => {
   };
 
   const handleSaveDay = async (dayData: DeliveryDay) => {
+    if (!selectedStoreId) {
+      toast.error("Nenhuma loja selecionada.");
+      return;
+    }
+
     try {
       const dateStr = `${selectedYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-${dayData.day.toString().padStart(2, '0')}`;
 
@@ -139,7 +157,7 @@ const DeliveryCashSheet = () => {
           reimbursement_value: shift.reimbursement_value,
           reimbursement_note: shift.reimbursement_note,
           manager_name: dayData.manager_morning
-        });
+        }, selectedStoreId);
       }
 
       // Salvar turnos da noite
@@ -160,7 +178,7 @@ const DeliveryCashSheet = () => {
           reimbursement_value: shift.reimbursement_value,
           reimbursement_note: shift.reimbursement_note,
           manager_name: dayData.manager_night
-        });
+        }, selectedStoreId);
       }
 
       toast.success("Dados salvos com sucesso!");
@@ -196,13 +214,20 @@ const DeliveryCashSheet = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           <header className="space-y-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Link to="/">
-                  <Button variant="ghost" size="sm" className="pl-0 hover:pl-2 transition-all">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar ao Dashboard
-                  </Button>
-                </Link>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Link to="/">
+                    <Button variant="ghost" size="sm" className="pl-0 hover:pl-2 transition-all">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Voltar ao Dashboard
+                    </Button>
+                  </Link>
+                </div>
+
+                <StoreSelector
+                  selectedStoreId={selectedStoreId}
+                  onStoreChange={setSelectedStoreId}
+                />
               </div>
               <h1 className="text-4xl font-bold text-foreground">Folha de Caixa Delivery</h1>
               <p className="text-muted-foreground mt-2">Controle diário de operações de caixa</p>
