@@ -2175,32 +2175,55 @@
 
                     elemento.classList.remove('cor-verde', 'cor-vermelha');
 
-                    if (valor <= 0) { elemento.classList.add('cor-verde'); } else {
-                        elemento.classList.add('cor-vermelha'); } } function aplicarCorMO(elementId, valorMO) { const
-                        elemento=document.getElementById(elementId); if (!elemento) return;
-                        elemento.classList.remove('cor-verde', 'cor-vermelha' ); if (valorMO <=CONSTANTES.MO_OBJETIVO) {
-                        elemento.classList.add('cor-verde'); } else { elemento.classList.add('cor-vermelha'); } }
-                        //=============ATUALIZAR RESUMO DO DIA=============function atualizarResumoDia() { // Manhã
-                        const m_vendas=parseFloat(document.getElementById('m_vnd_real').value) || 0; const
-                        m_gcs=parseInt(document.getElementById('m_gcs_real').value) || 0; const
-                        m_horas=parseFloat(document.getElementById('m_horas').value) || 0; // Noite const
-                        n_vendas=parseFloat(document.getElementById('n_vnd_real').value) || 0; const
-                        n_gcs=parseInt(document.getElementById('n_gcs_real').value) || 0; const
-                        n_horas=parseFloat(document.getElementById('n_horas').value) || 0; // Totais const
-                        vendas_total=m_vendas + n_vendas; const gcs_total=m_gcs + n_gcs; const horas_total=m_horas +
-                        n_horas; const bm_medio=gcs_total> 0 ? vendas_total / gcs_total : 0;
 
-                        // MO Dia
-                        const mo_dia = vendas_total > 0 ? ((horas_total * CONSTANTES.VALOR_MO) / vendas_total) * 100 :
-                        0;
+                    if (valor <= 0) {
+                        elemento.classList.add('cor-verde');
+                    } else {
+                        elemento.classList.add('cor-vermelha');
+                    }
+                }
 
-                        document.getElementById('resumo-vendas').textContent = formatarMoeda(vendas_total);
-                        document.getElementById('resumo-gcs').textContent = formatarNumero(gcs_total, 0);
-                        document.getElementById('resumo-bm').textContent = formatarMoeda(bm_medio);
-                        document.getElementById('resumo-mo').textContent = formatarPercentagem(mo_dia);
-                        document.getElementById('resumo-dia-numero').textContent = estado.diaAtual;
-                        document.getElementById('resumo-mes-nome').textContent = CONSTANTES.MESES[estado.mesAtual];
-                        }
+                function aplicarCorMO(elementId, valorMO) {
+                    const elemento = document.getElementById(elementId);
+                    if (!elemento) return;
+
+                    elemento.classList.remove('cor-verde', 'cor-vermelha');
+
+                    if (valorMO <= CONSTANTES.MO_OBJETIVO) {
+                        elemento.classList.add('cor-verde');
+                    } else {
+                        elemento.classList.add('cor-vermelha');
+                    }
+                }
+
+                // ============= ATUALIZAR RESUMO DO DIA =============
+                function atualizarResumoDia() {
+                    // Manhã
+                    const m_vendas = parseFloat(document.getElementById('m_vnd_real').value) || 0;
+                    const m_gcs = parseInt(document.getElementById('m_gcs_real').value) || 0;
+                    const m_horas = parseFloat(document.getElementById('m_horas').value) || 0;
+
+                    // Noite
+                    const n_vendas = parseFloat(document.getElementById('n_vnd_real').value) || 0;
+                    const n_gcs = parseInt(document.getElementById('n_gcs_real').value) || 0;
+                    const n_horas = parseFloat(document.getElementById('n_horas').value) || 0;
+
+                    // Totais
+                    const vendas_total = m_vendas + n_vendas;
+                    const gcs_total = m_gcs + n_gcs;
+                    const horas_total = m_horas + n_horas;
+                    const bm_medio = gcs_total > 0 ? vendas_total / gcs_total : 0;
+
+                    // MO Dia
+                    const mo_dia = vendas_total > 0 ? ((horas_total * CONSTANTES.VALOR_MO) / vendas_total) * 100 : 0;
+
+                    document.getElementById('resumo-vendas').textContent = formatarMoeda(vendas_total);
+                    document.getElementById('resumo-gcs').textContent = formatarNumero(gcs_total, 0);
+                    document.getElementById('resumo-bm').textContent = formatarMoeda(bm_medio);
+                    document.getElementById('resumo-mo').textContent = formatarPercentagem(mo_dia);
+                    document.getElementById('resumo-dia-numero').textContent = estado.diaAtual;
+                    document.getElementById('resumo-mes-nome').textContent = CONSTANTES.MESES[estado.mesAtual];
+                }
 
                         // ============= ADICIONAR LISTENERS AOS CAMPOS =============
                         function inicializarCampos() {
