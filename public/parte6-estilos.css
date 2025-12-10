@@ -1,0 +1,43 @@
+/* ===== PARTE 6: TAB TABELA MENSAL ===== */
+.tabela-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.tabela-header h2 { margin: 0; font-size: 24px; color: #111827; }
+.tabela-controles { display: flex; align-items: center; gap: 15px; }
+.tabela-controles label { font-weight: 600; color: #374151; }
+.select-mes-tabela { padding: 10px 20px; border: 2px solid #D1D5DB; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; background: white; transition: all 0.2s; }
+.select-mes-tabela:focus { outline: none; border-color: #7C3AED; }
+.tabelas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+@media (max-width: 1400px) { .tabelas-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .tabelas-grid { grid-template-columns: 1fr; } }
+.gerente-tabela { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+.gerente-tabela-header { padding: 15px; color: white; text-align: center; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+.gerente-tabela-corpo { padding: 0; }
+.tabela-dados { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tabela-dados th { background: #F3F4F6; padding: 10px 8px; text-align: center; font-weight: 700; text-transform: uppercase; font-size: 10px; color: #6B7280; border-bottom: 2px solid #E5E7EB; }
+.tabela-dados td { padding: 8px; text-align: center; border-bottom: 1px solid #F3F4F6; }
+.tabela-dados tr:last-child td { border-bottom: none; }
+.tabela-dados .label-coluna { text-align: left; font-weight: 600; color: #374151; padding-left: 15px; }
+.tabela-dados .valor-numero { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #111827; }
+.tabela-dados .valor-verde { color: #10B981; font-weight: 700; }
+.tabela-dados .valor-vermelho { color: #EF4444; font-weight: 700; }
+.tabela-dados .turno-vazio { color: #9CA3AF; font-style: italic; }
+.tabela-dados .linha-destaque td { background: #F9FAFB; font-weight: 700; }
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .cabecalho, .navegacao-meses, .navegacao-dias, .tabs, .acoes-container, .tabela-controles, .analise-controles, .indicador-salvo { display: none !important; }
+  .gerente-tabela { break-inside: avoid; page-break-inside: avoid; }
+  .tabelas-grid { grid-template-columns: repeat(2, 1fr); }
+  body { background: white; }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #F3F4F6; border-radius: 5px; }
+::-webkit-scrollbar-thumb { background: #7C3AED; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #6D28D9; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.gerente-card, .gerente-tabela, .turno-card { animation: fadeIn 0.3s ease-out; }
+.loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(124, 58, 237, 0.3); border-radius: 50%; border-top-color: #7C3AED; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

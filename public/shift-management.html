@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informações de Turno - Amadora 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+            background: #F9FAFB;
+            color: #111827;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* ===== CABEÇALHO ===== */
+        .cabecalho {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .cabecalho h1 {
+            font-size: 28px;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+
+        .constantes {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .constante-box {
+            background: #FFF9E6;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid #F59E0B;
+            font-weight: 600;
+            color: #92400E;
+        }
+
+        .aviso {
+            background: #FEF3C7;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #F59E0B;
+            color: #92400E;
+            font-size: 14px;
+        }
+
+        /* ===== NAVEGAÇÃO MESES ===== */
+        .navegacao-meses {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-mes {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #E5E7EB;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-mes:hover {
+            background: #D1D5DB;
+        }
+
+        .btn-mes.ativo {
+            background: #7C3AED;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+        }
+
+        /* ===== NAVEGAÇÃO DIAS ===== */
+        .navegacao-dias {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .btn-dia {
+            width: 45px;
+            height: 45px;
+            border: 2px solid #D1D5DB;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-dia:hover {
+            border-color: #7C3AED;
+            color: #7C3AED;
+        }
+
+        .btn-dia.ativo {
+            background: #7C3AED;
+            border-color: #7C3AED;
+            color: white;
+            font-weight: 700;
+        }
+
+        .btn-navegacao-dia {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #6B7280;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-navegacao-dia:hover:not(:disabled) {
+            background: #4B5563;
+        }
+
+        .btn-navegacao-dia:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            border-bottom: 2px solid #E5E7EB;
+            margin-bottom: 30px;
+        }
+
+        .btn-tab {
+            padding: 15px 25px;
+            border: none;
+            background: transparent;
+            color: #6B7280;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .btn-tab:hover {
+            color: #9333EA;
+        }
+
+        .btn-tab.ativo {
+            color: #7C3AED;
+            font-weight: 700;
+            border-bottom-color: #7C3AED;
+        }
+
+        /* ===== CONTEÚDO TABS ===== */
+        .tab-conteudo {
+            display: none;
+        }
+
+        .tab-conteudo.ativo {
+            display: block;
+        }
+
+        /* ===== RESUMO DO DIA ===== */
+        .resumo-dia {
+            background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+        }
+
+        .resumo-dia h3 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .resumo-metricas {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .metrica-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .metrica-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .metrica-valor {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ===== CARTÕES DOS TURNOS ===== */
+        .turnos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .turno-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== CABEÇALHOS DOS TURNOS ===== */
+        .turno-header {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .turno-header h2 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .turno-manha {
+            background: #FFA500;
+            color: #000;
+        }
+
+        .turno-noite {
+            background: #1F2937;
+            color: white;
+        }
+
+        /* ===== CORPO DO TURNO ===== */
+        .turno-corpo {
+            padding: 25px;
+        }
+
+        /* ===== CAMPOS ===== */
+        .campo-grupo {
+            margin-bottom: 18px;
+        }
+
+        .campo-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #6B7280;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .campo-linha {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .campo-coluna {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: right;
+            transition: all 0.2s;
+        }
+
+        .campo-input:focus {
+            outline: none;
+            border-color: #7C3AED;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        /* Campos editáveis - fundo amarelo */
+        .campo-input.editavel {
+            background: #FFF9E6;
+            font-weight: 500;
+        }
+
+        .campo-input.editavel:hover {
+            background: #FFF4CC;
+        }
+
+        /* Campos calculados - fundo branco */
+        .campo-input.calculado {
+            background: white;
+            cursor: not-allowed;
+            color: #374151;
+        }
+
+        /* Select (dropdown) */
+        select.campo-input {
+            text-align: left;
+            cursor: pointer;
+        }
+
+        /* ===== RESUMO DO TURNO ===== */
+        .turno-resumo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #E5E7EB;
+        }
+
+        .resumo-item {
+            background: #F3F4F6;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .resumo-item-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #6B7280;
+            margin-bottom: 5px;
+        }
+
+        .resumo-item-valor {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #111827;
+        }
+
+        /* ===== BOTÕES DE AÇÃO ===== */
+        .acoes-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-primario {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            background: #7C3AED;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primario:hover {
+            background: #6D28D9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-secundario {
+            padding: 15px 30px;
+            border: 2px solid #6B7280;
+            border-radius: 10px;
+            background: white;
+            color: #6B7280;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secundario:hover {
+            background: #F3F4F6;
+            border-color: #374151;
+            color: #374151;
+        }
+
+        /* ===== CORES PARA DIFERENÇAS ===== */
+        .cor-verde {
+            color: #10B981 !important;
+            font-weight: 700;
+        }
+
+        .cor-vermelha {
+            color: #EF4444 !important;
+            font-weight: 700;
+        }
+
+        /* Aplicar também ao fundo dos campos calculados */
+        .campo-input.calculado.cor-verde {
+            background: #ECFDF5;
+            border-color: #10B981;
+        }
+
+        .campo-input.calculado.cor-vermelha {
+            background: #FEF2F2;
+            border-color: #EF4444;
+        }
+
+        /* ===== INDICADOR "GUARDADO" ===== */
+        .indicador-salvo {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #10B981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .indicador-salvo.visivel {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .indicador-salvo::before {
+            content: '✓';
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: white;
+            color: #10B981;
+            border-radius: 50%;
+            font-weight: 700;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+
+        /* ===== RESPONSIVO ===== */
+        @media (max-width: 1024px) {
+            .turnos-container {
+                grid-template-columns: 1fr;
+            }
+
+            .campo-linha {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .navegacao-meses {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .constantes {
+                flex-direction: column;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .btn-dia {
+                width: 40px;
+                height: 40px;
+                font-size: 12px;
+            }
+
+            .resumo-metricas {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .analise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .analise-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: #111827;
+        }
+
+        .analise-controles {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .analise-controles label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .select-mes-analise {
+            padding: 10px 20px;
+            border: 2px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .select-mes-analise:focus {
+            outline: none;
+            border-color: #7C3AED;
+        }
+
+        .gerentes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .gerente-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .gerente-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .gerente-header {
+            padding: 20px;
+            color: white;
+            text-align: center;
+            font-weight: 700;
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .gerente-corpo {
+            padding: 25px;
+        }
+
+        .stat-linha {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F3F4F6;
+        }
+
+        .stat-linha:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-valor {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #111827;
+        }
+
+        .stat-valor.verde {
+            color: #10B981;
+        }
+
+        .stat-valor.vermelho {
+            color: #EF4444;
+        }
+
+        .stat-valor.azul {
+            color: #3B82F6;
+        }
+
+        .badge-turnos {
+            display: inline-block;
+            background: #7C3AED;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .stat-secao {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #9CA3AF;
+            margin: 20px 0 10px 0;
+            letter-spacing: 1px;
+        }
+
+        .gerente-vazio {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9CA3AF;
+        }
+
+        .gerente-vazio::before {
+            content: '📭';
+            display: block;
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .gerentes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== DARK MODE ===== */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #111827;
+                color: #F9FAFB;
+            }
+
+            .container {
+                background: #111827;
+            }
+
+            .cabecalho,
+            .analise-header,
+            .tabela-header,
+            .turno-card,
+            .gerente-card,
+            .gerente-tabela,
+            .select-mes-analise,
+            .select-mes-tabela {
+                background: #1F2937;
+                color: #F9FAFB;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .cabecalho h1,
+            .analise-header h2,
+            .tabela-header h2,
+            .turno-header h2,
+            .gerente-header,
+            .gerente-tabela-header {
+                color: #F9FAFB;
+            }
+
+            .constante-box,
+            .aviso {
+                background: #374151;
+                border-color: #F59E0B;
+                color: #FCD34D;
+            }
+
+            .btn-mes {
+                background: #374151;
+                color: #D1D5DB;
+            }
+
+            .btn-mes:hover {
+                background: #4B5563;
+            }
+
+            .btn-dia {
+                background: #1F2937;
+                border-color: #374151;
+                color: #D1D5DB;
+            }
+
+            .btn-dia:hover {
+                border-color: #7C3AED;
+                color: #7C3AED;
+            }
+
+            .btn-tab {
+                color: #9CA3AF;
+            }
+
+            .btn-tab:hover {
+                color: #C4B5FD;
+            }
+
+            .campo-label,
+            .resumo-item-label,
+            .analise-controles label,
+            .tabela-controles label,
+            .tabela-dados .label-coluna {
+                color: #D1D5DB;
+            }
+
+            .campo-input {
+                background: #374151;
+                border-color: #4B5563;
+                color: white;
+            }
+
+            .campo-input:focus {
+                border-color: #7C3AED;
+                background: #374151;
+            }
+
+            .campo-input.editavel {
+                background: #422006;
+                /* Dark orange/brown for editable fields */
+                color: #FEF3C7;
+                border-color: #F59E0B;
+            }
+
+            .campo-input.editavel:hover {
+                background: #451a03;
+            }
+
+            .campo-input.calculado {
+                background: #111827;
+                color: #9CA3AF;
+                border-color: #374151;
+            }
+
+            .resumo-item {
+                background: #374151;
+            }
+
+            .resumo-item-valor {
+                color: white;
+            }
+
+            .btn-secundario {
+                background: #1F2937;
+                border-color: #4B5563;
+                color: #D1D5DB;
+            }
+
+            .btn-secundario:hover {
+                background: #374151;
+                color: white;
+            }
+
+            /* Tabela Mensal Dark */
+            .tabela-dados th {
+                background: #374151;
+                color: #D1D5DB;
+                border-bottom-color: #4B5563;
+            }
+
+            .tabela-dados td {
+                border-bottom-color: #374151;
+            }
+
+            .tabela-dados .valor-numero {
+                color: #F9FAFB;
+            }
+
+            /* Cores de status */
+            .cor-verde,
+            .tabela-dados .valor-verde {
+                color: #34D399 !important;
+                /* Lighter green for dark mode */
+            }
+
+            .cor-vermelha,
+            .tabela-dados .valor-vermelho {
+                color: #F87171 !important;
+                /* Lighter red for dark mode */
+            }
+
+            .campo-input.calculado.cor-verde {
+                background: #064E3B;
+                /* Dark green bg */
+                border-color: #059669;
+                color: #D1FAE5 !important;
+            }
+
+            .campo-input.calculado.cor-vermelha {
+                background: #7F1D1D;
+                /* Dark red bg */
+                border-color: #DC2626;
+                color: #FEE2E2 !important;
+            }
+
+            /* Turno Manhã - Ajuste de contraste */
+            .turno-manha {
+                color: #000;
+                /* Keep black text on orange */
+            }
+        }
+
+        /* ===== DARK MODE (Class-based) ===== */
+        body.dark-mode {
+            background: #111827;
+            color: #F9FAFB;
+        }
+
+        body.dark-mode .container {
+            background: #111827;
+        }
+
+        body.dark-mode .cabecalho,
+        body.dark-mode .analise-header,
+        body.dark-mode .tabela-header,
+        body.dark-mode .turno-card,
+        body.dark-mode .gerente-card,
+        body.dark-mode .gerente-tabela,
+        body.dark-mode .select-mes-analise,
+        body.dark-mode .select-mes-tabela {
+            background: #1F2937;
+            color: #F9FAFB;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .cabecalho h1,
+        body.dark-mode .analise-header h2,
+        body.dark-mode .tabela-header h2,
+        body.dark-mode .turno-header h2,
+        body.dark-mode .gerente-header,
+        body.dark-mode .gerente-tabela-header {
+            color: #F9FAFB;
+        }
+
+        body.dark-mode .constante-box,
+        body.dark-mode .aviso {
+            background: #374151;
+            border-color: #F59E0B;
+            color: #FCD34D;
+        }
+
+        body.dark-mode .btn-mes {
+            background: #374151;
+            color: #D1D5DB;
+        }
+
+        body.dark-mode .btn-mes:hover {
+            background: #4B5563;
+        }
+
+        body.dark-mode .btn-dia {
+            background: #1F2937;
+            border-color: #374151;
+            color: #D1D5DB;
+        }
+
+        body.dark-mode .btn-dia:hover {
+            border-color: #7C3AED;
+            color: #7C3AED;
+        }
+
+        body.dark-mode .btn-tab {
+            color: #9CA3AF;
+        }
+
+        body.dark-mode .btn-tab:hover {
+            color: #C4B5FD;
+        }
+
+        body.dark-mode .campo-label,
+        body.dark-mode .resumo-item-label,
+        body.dark-mode .analise-controles label,
+        body.dark-mode .tabela-controles label,
+        body.dark-mode .tabela-dados .label-coluna {
+            color: #D1D5DB;
+        }
+
+        body.dark-mode .campo-input {
+            background: #374151;
+            border-color: #4B5563;
+            color: white;
+        }
+
+        body.dark-mode .campo-input:focus {
+            border-color: #7C3AED;
+            background: #374151;
+        }
+
+        body.dark-mode .campo-input.editavel {
+            background: #422006;
+            color: #FEF3C7;
+            border-color: #F59E0B;
+        }
+
+        body.dark-mode .campo-input.editavel:hover {
+            background: #451a03;
+        }
+
+        body.dark-mode .campo-input.calculado {
+            background: #111827;
+            color: #9CA3AF;
+            border-color: #374151;
+        }
+
+        body.dark-mode .resumo-item {
+            background: #374151;
+        }
+
+        body.dark-mode .resumo-item-valor {
+            color: white;
+        }
+
+        body.dark-mode .btn-secundario {
+            background: #1F2937;
+            border-color: #4B5563;
+            color: #D1D5DB;
+        }
+
+        body.dark-mode .btn-secundario:hover {
+            background: #374151;
+            color: white;
+        }
+
+        /* Tabela Mensal Dark */
+        body.dark-mode .tabela-dados th {
+            background: #374151;
+            color: #D1D5DB;
+            border-bottom-color: #4B5563;
+        }
+
+        body.dark-mode .tabela-dados td {
+            border-bottom-color: #374151;
+        }
+
+        body.dark-mode .tabela-dados .valor-numero {
+            color: #F9FAFB;
+        }
+
+        /* Cores de status */
+        body.dark-mode .cor-verde,
+        body.dark-mode .tabela-dados .valor-verde {
+            color: #34D399 !important;
+        }
+
+        body.dark-mode .cor-vermelha,
+        body.dark-mode .tabela-dados .valor-vermelho {
+            color: #F87171 !important;
+        }
+
+        body.dark-mode .campo-input.calculado.cor-verde {
+            background: #064E3B;
+            border-color: #059669;
+            color: #D1FAE5 !important;
+        }
+
+        body.dark-mode .campo-input.calculado.cor-vermelha {
+            background: #7F1D1D;
+            border-color: #DC2626;
+            color: #FEE2E2 !important;
+        }
+
+        body.dark-mode .turno-manha {
+            color: #000;
+        }
+
+        /* Botão Toggle Theme */
+        .btn-tema {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode .btn-tema {
+            background: #374151;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <button id="btn-tema" class="btn-tema">🌙</button>
+    <div class="container">
+        <!-- CABEÇALHO -->
+        <div class="cabecalho">
+            <h1>🍔 Informações de Turno - Amadora 2025</h1>
+            <div class="constantes">
+                <div class="constante-box">OBJ MO: 10,50%</div>
+                <div class="constante-box">Valor MO: 7,40 €</div>
+            </div>
+            <div class="aviso">
+                ⚠️ Aviso: Preencher apenas campos amarelos • Manhã até 16h (±10') • Noite até 1h (±10')
+            </div>
+        </div>
+
+        <!-- NAVEGAÇÃO DE MESES -->
+        <div id="navegacao-meses" class="navegacao-meses">
+            <!-- Gerado via JS -->
+        </div>
+
+        <!-- NAVEGAÇÃO DE DIAS -->
+        <div class="navegacao-dias">
+            <button id="btn-dia-anterior" class="btn-navegacao-dia" onclick="diaAnterior()">← Dia Anterior</button>
+            <div id="navegacao-dias-container" style="display: contents;">
+                <!-- Gerado via JS -->
+            </div>
+            <button id="btn-dia-proximo" class="btn-navegacao-dia" onclick="proximoDia()">Próximo Dia →</button>
+        </div>
+
+        <!-- SEPARADORES (TABS) -->
+        <div class="tabs">
+            <button class="btn-tab ativo" data-tab="entrada" onclick="selecionarTab('entrada')">📝 Entrada de
+                Dados</button>
+            <button class="btn-tab" data-tab="analise" onclick="selecionarTab('analise')">👥 Análise Gerentes</button>
+            <button class="btn-tab" data-tab="tabela" onclick="selecionarTab('tabela')">📊 Tabela Mensal</button>
+        </div>
+
+        <!-- CONTEÚDO DOS TABS -->
+        <div id="tab-entrada" class="tab-conteudo ativo">
+            <!-- RESUMO DO DIA -->
+            <div class="resumo-dia">
+                <h3>📊 Resumo do Dia <span id="resumo-dia-numero">1</span> - <span id="resumo-mes-nome">Janeiro</span>
+                </h3>
+
+                <div class="resumo-metricas">
+                    <div class="metrica-box">
+                        <div class="metrica-label">Vendas Total</div>
+                        <div class="metrica-valor" id="resumo-vendas">0,00 €</div>
+                    </div>
+
+                    <div class="metrica-box">
+                        <div class="metrica-label">GC's Total</div>
+                        <div class="metrica-valor" id="resumo-gcs">0</div>
+                    </div>
+
+                    <div class="metrica-box">
+                        <div class="metrica-label">BM Médio</div>
+                        <div class="metrica-valor" id="resumo-bm">0,00 €</div>
+                    </div>
+
+                    <div class="metrica-box">
+                        <div class="metrica-label">MO Média</div>
+                        <div class="metrica-valor" id="resumo-mo">0,00%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARTÕES DOS TURNOS -->
+            <div class="turnos-container">
+                <!-- CARTÃO MANHÃ -->
+                <div class="turno-card">
+                    <div class="turno-header turno-manha">
+                        <h2>☀️ TURNO DA MANHÃ</h2>
+                    </div>
+
+                    <div class="turno-corpo">
+                        <!-- 1. GERENTE -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">GERENTE</label>
+                            <select class="campo-input editavel" id="m_gerente">
+                                <option value="">Selecionar...</option>
+                                <option value="Bruna">Bruna</option>
+                                <option value="Isaac">Isaac</option>
+                                <option value="Isabel">Isabel</option>
+                                <option value="Janice">Janice</option>
+                                <option value="Uilson">Uilson</option>
+                                <option value="William">William</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. VENDAS (16H) -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">VENDAS (16H)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_vnd_real" placeholder="Real"
+                                        step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_vnd_plan"
+                                        placeholder="Planificado" step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_vnd_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. GC'S -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">GC'S</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_gcs_real" placeholder="Real"
+                                        step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_gcs_plan"
+                                        placeholder="Planificado" step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_gcs_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. BM -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">BM (BILHETE MÉDIO)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_bm_calc"
+                                        placeholder="Calculado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_bm_plan"
+                                        placeholder="Planificado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_bm_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. HORAS -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">HORAS</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_horas" placeholder="Real"
+                                        step="0.001">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_horas_plan"
+                                        placeholder="Planificado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_horas_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. MO % -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">MO %</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_mo_pct" placeholder="Real"
+                                        readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_mo_obj" value="10,50%"
+                                        readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_mo_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. PERDAS -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">PERDAS</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_perdas_real"
+                                        placeholder="Real" step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_perdas_plan"
+                                        placeholder="Planificado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_perdas_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 8. PERDAS M/N -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">PERDAS M/N</label>
+                            <input type="number" class="campo-input editavel" id="m_perdas_mn" placeholder="Valor"
+                                step="0.01">
+                        </div>
+
+                        <!-- 9. DESVIO INVENTÁRIO -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">DESVIO INVENTÁRIO</label>
+                            <input type="number" class="campo-input editavel" id="m_desinv" placeholder="Valor"
+                                step="0.01">
+                        </div>
+
+                        <!-- 10. TET -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">TET (segundos)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_tet" placeholder="Real"
+                                        step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_tet_obj"
+                                        value="Objectivo 150&quot;" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_tet_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 11. R2P -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">R2P (segundos)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_r2p" placeholder="Real"
+                                        step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_r2p_obj"
+                                        value="Objectivo 90&quot;" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_r2p_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 12. REEMBOLSOS -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">REEMBOLSOS</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_reemb_qtd"
+                                        placeholder="Quantidade" step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="m_reemb_val"
+                                        placeholder="Valor €" step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="m_reemb_media"
+                                        placeholder="Média" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RESUMO DO TURNO -->
+                        <div class="turno-resumo">
+                            <div class="resumo-item">
+                                <div class="resumo-item-label">BM</div>
+                                <div class="resumo-item-valor" id="m_resumo_bm">€0,00</div>
+                            </div>
+                            <div class="resumo-item">
+                                <div class="resumo-item-label">MO</div>
+                                <div class="resumo-item-valor" id="m_resumo_mo">0,00%</div>
+                            </div>
+                            <div class="resumo-item">
+                                <div class="resumo-item-label">DIF MO</div>
+                                <div class="resumo-item-valor" id="m_resumo_mo_dif">0,00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARTÃO NOITE (estrutura idêntica à manhã) -->
+                <div class="turno-card">
+                    <div class="turno-header turno-noite">
+                        <h2>🌙 TURNO DA NOITE</h2>
+                    </div>
+
+                    <div class="turno-corpo">
+                        <!-- 1. GERENTE -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">GERENTE</label>
+                            <select class="campo-input editavel" id="n_gerente">
+                                <option value="">Selecionar...</option>
+                                <option value="Bruna">Bruna</option>
+                                <option value="Isaac">Isaac</option>
+                                <option value="Isabel">Isabel</option>
+                                <option value="Janice">Janice</option>
+                                <option value="Uilson">Uilson</option>
+                                <option value="William">William</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. VENDAS (16H) -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">VENDAS (16H)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_vnd_real" placeholder="Real"
+                                        step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_vnd_plan"
+                                        placeholder="Planificado" step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_vnd_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. GC'S -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">GC'S</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_gcs_real" placeholder="Real"
+                                        step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_gcs_plan"
+                                        placeholder="Planificado" step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_gcs_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. BM -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">BM (BILHETE MÉDIO)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_bm_calc"
+                                        placeholder="Calculado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_bm_plan"
+                                        placeholder="Planificado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_bm_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. HORAS -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">HORAS</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_horas" placeholder="Real"
+                                        step="0.001">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_horas_plan"
+                                        placeholder="Planificado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_horas_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. MO % -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">MO %</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_mo_pct" placeholder="Real"
+                                        readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_mo_obj" value="10,50%"
+                                        readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_mo_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. PERDAS -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">PERDAS</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_perdas_real"
+                                        placeholder="Real" step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_perdas_plan"
+                                        placeholder="Planificado" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_perdas_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 8. PERDAS M/N -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">PERDAS M/N</label>
+                            <input type="number" class="campo-input editavel" id="n_perdas_mn" placeholder="Valor"
+                                step="0.01">
+                        </div>
+
+                        <!-- 9. DESVIO INVENTÁRIO -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">DESVIO INVENTÁRIO</label>
+                            <input type="number" class="campo-input editavel" id="n_desinv" placeholder="Valor"
+                                step="0.01">
+                        </div>
+
+                        <!-- 10. TET -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">TET (segundos)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_tet" placeholder="Real"
+                                        step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_tet_obj"
+                                        value="Objectivo 150&quot;" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_tet_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 11. R2P -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">R2P (segundos)</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_r2p" placeholder="Real"
+                                        step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_r2p_obj"
+                                        value="Objectivo 90&quot;" readonly>
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_r2p_dif"
+                                        placeholder="Diferença" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 12. REEMBOLSOS -->
+                        <div class="campo-grupo">
+                            <label class="campo-label">REEMBOLSOS</label>
+                            <div class="campo-linha">
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_reemb_qtd"
+                                        placeholder="Quantidade" step="1">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="number" class="campo-input editavel" id="n_reemb_val"
+                                        placeholder="Valor €" step="0.01">
+                                </div>
+                                <div class="campo-coluna">
+                                    <input type="text" class="campo-input calculado" id="n_reemb_media"
+                                        placeholder="Média" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RESUMO DO TURNO -->
+                        <div class="turno-resumo">
+                            <div class="resumo-item">
+                                <div class="resumo-item-label">BM</div>
+                                <div class="resumo-item-valor" id="n_resumo_bm">€0,00</div>
+                            </div>
+                            <div class="resumo-item">
+                                <div class="resumo-item-label">MO</div>
+                                <div class="resumo-item-valor" id="n_resumo_mo">0,00%</div>
+                            </div>
+                            <div class="resumo-item">
+                                <div class="resumo-item-label">DIF MO</div>
+                                <div class="resumo-item-valor" id="n_resumo_mo_dif">0,00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="acoes-container">
+                <button class="btn-primario" id="btn-guardar">💾 Guardar Dados</button>
+                <button class="btn-secundario" id="btn-limpar">🔄 Limpar Dia</button>
+                <button class="btn-secundario" id="btn-exportar">📥 Exportar Backup</button>
+                <button class="btn-secundario" id="btn-importar">📤 Importar Backup</button>
+            </div>
+        </div>
+
+        <div id="tab-analise" class="tab-conteudo">
+            <div class="analise-header">
+                <h2>👥 Análise por Gerente</h2>
+                <div class="analise-controles">
+                    <label for="select-mes-analise">Mês:</label>
+                    <select id="select-mes-analise" class="select-mes-analise"></select>
+                    <button class="btn-secundario" id="btn-recalcular-analise">🔄 Recalcular</button>
+                </div>
+            </div>
+            <div class="gerentes-grid" id="gerentes-grid"></div>
+            <p style="display:none">
+                Conteúdo da Análise de Gerentes (Será implementado na próxima etapa)
+            </p>
+        </div>
+
+        <div id="tab-tabela" class="tab-conteudo">
+            <p style="padding: 20px; background: white; border-radius: 8px; border: 1px solid #E5E7EB;">
+                Conteúdo da Tabela Mensal (Será implementado na próxima etapa)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ============= TEMA (DARK/LIGHT) =============
+        const btnTema = document.getElementById('btn-tema');
+        const body = document.body;
+
+        // Carregar preferência salva ou do sistema
+        const savedTheme = localStorage.getItem('vite-ui-theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Determinar se deve usar modo escuro
+        let shouldUseDark = false;
+        if (savedTheme === 'dark') {
+            shouldUseDark = true;
+        } else if (savedTheme === 'system' || !savedTheme) {
+            shouldUseDark = systemDark;
+        }
+        
+        if (shouldUseDark) {
+            body.classList.add('dark-mode');
+            if (btnTema) btnTema.textContent = '☀️';
+        }
+
+        if (btnTema) {
+            btnTema.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                const isDark = body.classList.contains('dark-mode');
+                btnTema.textContent = isDark ? '☀️' : '🌙';
+                localStorage.setItem('vite-ui-theme', isDark ? 'dark' : 'light');
+            });
+        }
+
+        const CONSTANTES = {
+            MO_OBJETIVO: 10.5,
+            VALOR_MO: 7.4,
+            TET_OBJETIVO: 150,
+            R2P_OBJETIVO: 90,
+            PERDAS_PCT: 0.5,
+
+            GERENTES: ["Bruna", "Isaac", "Isabel", "Janice", "Uilson", "William"],
+
+            CORES_GERENTES: {
+                "Bruna": "#EC4899",
+                "Isaac": "#F97316",
+                "Isabel": "#14B8A6",
+                "Janice": "#8B5CF6",
+                "Uilson": "#06B6D4",
+                "William": "#10B981"
+            },
+
+            MESES: [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ],
+
+            DIAS_NO_MES: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        };
+
+        // ============= ESTADO GLOBAL =============
+        let estado = {
+            mesAtual: 0,
+            diaAtual: 1,
+            tabAtual: 'entrada'
+        };
+
+                function formatarMoeda(valor) {
+                if (isNaN(valor) || valor === null) return '0,00 €';
+                return new Intl.NumberFormat('pt-PT', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+                }).format(valor);
+                }
+
+                function formatarNumero(valor, decimais = 0) {
+                if (isNaN(valor) || valor === null) return '-';
+                return new Intl.NumberFormat('pt-PT', {
+                minimumFractionDigits: decimais,
+                maximumFractionDigits: decimais
+                }).format(valor);
+                }
+
+                function formatarPercentagem(valor) {
+                if (isNaN(valor) || valor === null) return '0,00%';
+                return new Intl.NumberFormat('pt-PT', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+                }).format(valor) + '%';
+                }
+
+                // ============= CHAVE DO localStorage =============
+                const STORAGE_KEY = 'turnosData';
+
+                // ============= OBTER TODOS OS DADOS =============
+                function obterTodosDados() {
+                const dados = localStorage.getItem(STORAGE_KEY);
+                return dados ? JSON.parse(dados) : {};
+                }
+
+                // ============= SALVAR TODOS OS DADOS =============
+                function salvarTodosDados(dados) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+                }
+
+                // ============= OBTER CHAVE DO DIA ATUAL =============
+                function obterChaveDia() {
+                return `${estado.mesAtual}-${estado.diaAtual}`;
+                }
+
+                // ============= CARREGAR DADOS DO DIA =============
+                function carregarDadosDia() {
+                const chave = obterChaveDia();
+                const todosDados = obterTodosDados();
+                const dadosDia = todosDados[chave] || {};
+
+                console.log(`📂 Carregando: ${CONSTANTES.MESES[estado.mesAtual]} - Dia ${estado.diaAtual}`);
+
+                // Lista de todos os campos
+                const campos = [
+                // Manhã
+                'm_gerente', 'm_vnd_real', 'm_vnd_plan', 'm_gcs_real', 'm_gcs_plan',
+                'm_horas', 'm_perdas_real', 'm_perdas_mn', 'm_desinv',
+                'm_tet', 'm_r2p', 'm_reemb_qtd', 'm_reemb_val'
+                ];
+
+                // Carregar valores nos campos
+                campos.forEach(campoId => {
+                const elemento = document.getElementById(campoId);
+                if (elemento) {
+                const valor = dadosDia[campoId];
+                elemento.value = valor !== undefined && valor !== null ? valor : '';
+                }
+                });
+
+                // Recalcular após carregar
+                calcularCampos('m');
+                atualizarResumoDia();
+
+                console.log('✅ Dados carregados');
+                }
+
+                // ============= SALVAR DADOS DO DIA =============
+                function salvarDadosDia() {
+                const chave = obterChaveDia();
+                const todosDados = obterTodosDados();
+
+                // Coletar valores de todos os campos
+                const dadosDia = {};
+
+                const campos = [
+                // Manhã
+                'm_gerente', 'm_vnd_real', 'm_vnd_plan', 'm_gcs_real', 'm_gcs_plan',
+                'm_horas', 'm_perdas_real', 'm_perdas_mn', 'm_desinv',
+                'm_tet', 'm_r2p', 'm_reemb_qtd', 'm_reemb_val'
+                ];
+
+                campos.forEach(campoId => {
+                const elemento = document.getElementById(campoId);
+                if (elemento) {
+                const valor = elemento.value;
+                dadosDia[campoId] = valor !== '' ? valor : null;
+                }
+                });
+
+                // Salvar no objeto geral
+                todosDados[chave] = dadosDia;
+                salvarTodosDados(todosDados);
+
+                console.log('💾 Dados salvos:', chave);
+                mostrarIndicadorSalvo();
+                }
+
+                // ============= LIMPAR DADOS DO DIA =============
+                function limparDadosDia() {
+                // Confirmação
+                const confirmar = confirm(
+                `Tem certeza que deseja limpar todos os dados de ${CONSTANTES.MESES[estado.mesAtual]} - Dia
+                ${estado.diaAtual}?\n\n` +
+                'Esta ação não pode ser desfeita!'
+                );
+
+                if (!confirmar) return;
+
+                const chave = obterChaveDia();
+                const todosDados = obterTodosDados();
+
+                // Remover dados deste dia
+                delete todosDados[chave];
+                salvarTodosDados(todosDados);
+
+                // Limpar campos na interface
+                const campos = document.querySelectorAll('.campo-input');
+                campos.forEach(campo => {
+                if (!campo.readOnly) {
+                campo.value = '';
+                }
+                });
+
+                // Recalcular (vai zerar tudo)
+                calcularCampos('m');
+                atualizarResumoDia();
+
+                console.log('🗑️ Dados limpos:', chave);
+                alert('Dados do dia foram limpos com sucesso!');
+                }
+
+                // ============= AUTO-SAVE (com debounce) =============
+                let autoSaveTimeout;
+
+                function autoSalvar() {
+                // Cancelar timeout anterior
+                clearTimeout(autoSaveTimeout);
+
+                // Agendar novo save após 1 segundo de inatividade
+                autoSaveTimeout = setTimeout(() => {
+                salvarDadosDia();
+                }, 1000);
+                }
+
+                // ============= INDICADOR VISUAL DE "GUARDADO" =============
+                function mostrarIndicadorSalvo() {
+                // Criar elemento se não existir
+                let indicador = document.getElementById('indicador-salvo');
+
+                if (!indicador) {
+                indicador = document.createElement('div');
+                indicador.id = 'indicador-salvo';
+                indicador.className = 'indicador-salvo';
+                indicador.innerHTML = 'Guardado automaticamente';
+                document.body.appendChild(indicador);
+                }
+
+                // Mostrar
+                indicador.classList.add('visivel');
+
+                // Esconder após 2 segundos
+                setTimeout(() => {
+                indicador.classList.remove('visivel');
+                }, 2000);
+                }
+
+                // ============= EXPORTAR/IMPORTAR BACKUP =============
+                function exportarBackup() {
+                const todosDados = obterTodosDados();
+                const json = JSON.stringify(todosDados, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup-turnos-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                console.log('📥 Backup exportado');
+                alert('Backup exportado com sucesso!');
+                }
+
+                function importarBackup() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+
+                input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                try {
+                const dados = JSON.parse(event.target.result);
+
+                // Confirmar importação
+                const confirmar = confirm(
+                'Importar este backup vai SUBSTITUIR todos os dados atuais.\n\n' +
+                'Tem certeza que deseja continuar?'
+                );
+
+                if (confirmar) {
+                salvarTodosDados(dados);
+                carregarDadosDia();
+                console.log('📤 Backup importado');
+                alert('Backup importado com sucesso!');
+                }
+                } catch (error) {
+                console.error('Erro ao importar:', error);
+                alert('Erro ao importar backup. Verifique se o arquivo é válido.');
+                }
+                };
+
+                reader.readAsText(file);
+                };
+
+                input.click();
+                }
+
+                // ============= FUNÇÕES DE DEBUG =============
+                function verDadosSalvos() {
+                const dados = obterTodosDados();
+                console.table(dados);
+                console.log('Total de dias com dados:', Object.keys(dados).length);
+                return dados;
+                }
+
+                function limparTodosDados() {
+                if (confirm('ATENÇÃO: Isto vai apagar TODOS os dados salvos!\n\nTem certeza?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                console.log('🗑️ Todos os dados foram apagados');
+                carregarDadosDia();
+                alert('Todos os dados foram apagados!');
+                }
+                }
+
+
+
+
+                // ============= PARTE 5: ANÁLISE POR GERENTE =============
+                function calcularEstatisticasGerente(gerente, mes) {
+                const maxDias = CONSTANTES.DIAS_NO_MES[mes];
+                const todosDados = obterTodosDados();
+                const stats = { turnos: 0, manha: { turnos: 0, vendas_total: 0, vendas_plan_total: 0, gcs_total: 0,
+                gcs_plan_total: 0, horas_total: 0, perdas_total: 0, tet_valores: [], r2p_valores: [] }, noite: { turnos:
+                0, vendas_total: 0, vendas_plan_total: 0, gcs_total: 0, gcs_plan_total: 0, horas_total: 0, perdas_total:
+                0, tet_valores: [], r2p_valores: [] } };
+                for (let dia = 1; dia <= maxDias; dia++) { const chave=`${mes}-${dia}`; const dados=todosDados[chave];
+                    if (!dados) continue; if (dados.m_gerente===gerente) { stats.manha.turnos++; stats.turnos++;
+                    stats.manha.vendas_total +=parseFloat(dados.m_vnd_real) || 0; stats.manha.vendas_plan_total
+                    +=parseFloat(dados.m_vnd_plan) || 0; stats.manha.gcs_total +=parseInt(dados.m_gcs_real) || 0;
+                    stats.manha.gcs_plan_total +=parseInt(dados.m_gcs_plan) || 0; stats.manha.horas_total
+                    +=parseFloat(dados.m_horas) || 0; stats.manha.perdas_total +=parseFloat(dados.m_perdas_real) || 0;
+                    if (dados.m_tet && parseFloat(dados.m_tet)> 0)
+                    stats.manha.tet_valores.push(parseFloat(dados.m_tet));
+                    if (dados.m_r2p && parseFloat(dados.m_r2p) > 0)
+                    stats.manha.r2p_valores.push(parseFloat(dados.m_r2p));
+                    }
+                    if (dados.n_gerente === gerente) {
+                    stats.noite.turnos++; stats.turnos++;
+                    stats.noite.vendas_total += parseFloat(dados.n_vnd_real) || 0;
+                    stats.noite.vendas_plan_total += parseFloat(dados.n_vnd_plan) || 0;
+                    stats.noite.gcs_total += parseInt(dados.n_gcs_real) || 0;
+                    stats.noite.gcs_plan_total += parseInt(dados.n_gcs_plan) || 0;
+                    stats.noite.horas_total += parseFloat(dados.n_horas) || 0;
+                    stats.noite.perdas_total += parseFloat(dados.n_perdas_real) || 0;
+                    if (dados.n_tet && parseFloat(dados.n_tet) > 0)
+                    stats.noite.tet_valores.push(parseFloat(dados.n_tet));
+                    if (dados.n_r2p && parseFloat(dados.n_r2p) > 0)
+                    stats.noite.r2p_valores.push(parseFloat(dados.n_r2p));
+                    }
+                    }
+                    function calcularMetricas(turno) {
+                    const resultado = { vendas: turno.vendas_total, vendas_plan: turno.vendas_plan_total, gcs:
+                    turno.gcs_total, gcs_plan: turno.gcs_plan_total, horas: turno.horas_total, perdas:
+                    turno.perdas_total, bm: turno.gcs_total > 0 ? turno.vendas_total / turno.gcs_total : 0, bm_plan:
+                    turno.gcs_plan_total > 0 ? turno.vendas_plan_total / turno.gcs_plan_total : 0, mo:
+                    turno.vendas_total > 0 ? ((turno.horas_total * CONSTANTES.VALOR_MO) / turno.vendas_total) * 100 : 0,
+                    perdas_pct: turno.vendas_total > 0 ? (turno.perdas_total / turno.vendas_total) * 100 : 0, tet_medio:
+                    turno.tet_valores.length > 0 ? turno.tet_valores.reduce((a, b) => a + b, 0) /
+                    turno.tet_valores.length : 0, r2p_medio: turno.r2p_valores.length > 0 ? turno.r2p_valores.reduce((a,
+                    b) => a + b, 0) / turno.r2p_valores.length : 0 };
+                    resultado.bm_dif = resultado.bm - resultado.bm_plan; resultado.mo_dif = resultado.mo -
+                    CONSTANTES.MO_OBJETIVO; resultado.tet_dif = resultado.tet_medio - CONSTANTES.TET_OBJETIVO;
+                    resultado.r2p_dif = resultado.r2p_medio - CONSTANTES.R2P_OBJETIVO;
+                    return resultado;
+                    }
+                    stats.manha_calc = calcularMetricas(stats.manha); stats.noite_calc = calcularMetricas(stats.noite);
+                    return stats;
+                    }
+                    function renderizarCardGerente(gerente, stats, cor) {
+                    if (stats.turnos === 0) return `<div class="gerente-card">
+                        <div class="gerente-header" style="background: ${cor};">${gerente}</div>
+                        <div class="gerente-corpo">
+                            <div class="gerente-vazio">
+                                <p>Sem dados neste mês</p>
+                            </div>
+                        </div>
+                    </div>`;
+                    const temManha = stats.manha.turnos > 0; const temNoite = stats.noite.turnos > 0;
+                    let html = `<div class="gerente-card">
+                        <div class="gerente-header" style="background: ${cor};">${gerente}</div>
+                        <div class="gerente-corpo">
+                            <div class="badge-turnos">📊 ${stats.turnos} turno${stats.turnos !== 1 ? 's' : ''}</div>`;
+                            if (temManha) {
+                            const m = stats.manha_calc;
+                            html += `<div class="stat-secao">☀️ Manhã (${stats.manha.turnos} turnos)</div>
+                            <div class="stat-linha"><span class="stat-label">Vendas</span><span
+                                    class="stat-valor azul">${formatarMoeda(m.vendas)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">GC's</span><span
+                                    class="stat-valor">${formatarNumero(m.gcs, 0)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">BM Médio</span><span
+                                    class="stat-valor azul">${formatarMoeda(m.bm)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">Horas</span><span
+                                    class="stat-valor">${formatarNumero(m.horas, 1)}h</span></div>
+                            <div class="stat-linha"><span class="stat-label">MO %</span><span
+                                    class="stat-valor ${m.mo <= CONSTANTES.MO_OBJETIVO ? 'verde' : 'vermelho'}">${formatarPercentagem(m.mo)}</span>
+                            </div>
+                            <div class="stat-linha"><span class="stat-label">Dif. MO</span><span
+                                    class="stat-valor ${m.mo_dif <= 0 ? 'verde' : 'vermelho'}">${formatarNumero(m.mo_dif,
+                                    2)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">Perdas</span><span
+                                    class="stat-valor">${formatarMoeda(m.perdas)} (${formatarNumero(m.perdas_pct,
+                                    2)}%)</span></div>`;
+                            if (m.tet_medio > 0) html += `<div class="stat-linha"><span class="stat-label">TET
+                                    Médio</span><span
+                                    class="stat-valor ${m.tet_medio <= CONSTANTES.TET_OBJETIVO ? 'verde' : 'vermelho'}">${formatarNumero(m.tet_medio,
+                                    0)}"</span></div>`;
+                            if (m.r2p_medio > 0) html += `<div class="stat-linha"><span class="stat-label">R2P
+                                    Médio</span><span
+                                    class="stat-valor ${m.r2p_medio <= CONSTANTES.R2P_OBJETIVO ? 'verde' : 'vermelho'}">${formatarNumero(m.r2p_medio,
+                                    0)}"</span></div>`;
+                            }
+                            if (temNoite) {
+                            const n = stats.noite_calc;
+                            html += `<div class="stat-secao">🌙 Noite (${stats.noite.turnos} turnos)</div>
+                            <div class="stat-linha"><span class="stat-label">Vendas</span><span
+                                    class="stat-valor azul">${formatarMoeda(n.vendas)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">GC's</span><span
+                                    class="stat-valor">${formatarNumero(n.gcs, 0)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">BM Médio</span><span
+                                    class="stat-valor azul">${formatarMoeda(n.bm)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">Horas</span><span
+                                    class="stat-valor">${formatarNumero(n.horas, 1)}h</span></div>
+                            <div class="stat-linha"><span class="stat-label">MO %</span><span
+                                    class="stat-valor ${n.mo <= CONSTANTES.MO_OBJETIVO ? 'verde' : 'vermelho'}">${formatarPercentagem(n.mo)}</span>
+                            </div>
+                            <div class="stat-linha"><span class="stat-label">Dif. MO</span><span
+                                    class="stat-valor ${n.mo_dif <= 0 ? 'verde' : 'vermelho'}">${formatarNumero(n.mo_dif,
+                                    2)}</span></div>
+                            <div class="stat-linha"><span class="stat-label">Perdas</span><span
+                                    class="stat-valor">${formatarMoeda(n.perdas)} (${formatarNumero(n.perdas_pct,
+                                    2)}%)</span></div>`;
+                            if (n.tet_medio > 0) html += `<div class="stat-linha"><span class="stat-label">TET
+                                    Médio</span><span
+                                    class="stat-valor ${n.tet_medio <= CONSTANTES.TET_OBJETIVO ? 'verde' : 'vermelho'}">${formatarNumero(n.tet_medio,
+                                    0)}"</span></div>`;
+                            if (n.r2p_medio > 0) html += `<div class="stat-linha"><span class="stat-label">R2P
+                                    Médio</span><span
+                                    class="stat-valor ${n.r2p_medio <= CONSTANTES.R2P_OBJETIVO ? 'verde' : 'vermelho'}">${formatarNumero(n.r2p_medio,
+                                    0)}"</span></div>`;
+                            }
+                            html += `
+                        </div>
+                    </div>`; return html;
+                    }
+                    function atualizarAnaliseGerentes() {
+                    const mesAnalise = parseInt(document.getElementById('select-mes-analise').value);
+                    const grid = document.getElementById('gerentes-grid');
+                    if (!grid) return;
+                    console.log(`📊 Calculando análise: ${CONSTANTES.MESES[mesAnalise]}`);
+                    let html = '';
+                    CONSTANTES.GERENTES.forEach(gerente => {
+                    const stats = calcularEstatisticasGerente(gerente, mesAnalise);
+                    const cor = CONSTANTES.CORES_GERENTES[gerente];
+                    html += renderizarCardGerente(gerente, stats, cor);
+                    });
+                    grid.innerHTML = html;
+                    console.log('✅ Análise atualizada');
+                    }
+                    function inicializarTabAnalise() {
+                    const select = document.getElementById('select-mes-analise');
+                    if (select) {
+                    CONSTANTES.MESES.forEach((mes, index) => {
+                    const option = document.createElement('option');
+                    option.value = index; option.textContent = mes;
+                    if (index === estado.mesAtual) option.selected = true;
+                    select.appendChild(option);
+                    });
+                    select.addEventListener('change', atualizarAnaliseGerentes);
+                    }
+                    const btnRecalcular = document.getElementById('btn-recalcular-analise');
+                    if (btnRecalcular) btnRecalcular.addEventListener('click', atualizarAnaliseGerentes);
+                    const btnTabAnalise = document.querySelector('[data-tab="analise"]');
+                    if (btnTabAnalise) {
+                    btnTabAnalise.addEventListener('click', () => {
+                    if (select) select.value = estado.mesAtual;
+                    atualizarAnaliseGerentes();
+                    });
+                    }
+                    }
+
+                    // ============= CALCULAR TODOS OS CAMPOS DE UM TURNO =============
+                    function calcularCampos(turno) {
+                    const t = turno;
+
+                    // Obter valores dos campos editáveis
+                    const vndReal = parseFloat(document.getElementById(`${t}_vnd_real`).value) || 0;
+                    const vndPlan = parseFloat(document.getElementById(`${t}_vnd_plan`).value) || 0;
+                    const gcsReal = parseInt(document.getElementById(`${t}_gcs_real`).value) || 0;
+                    const gcsPlan = parseInt(document.getElementById(`${t}_gcs_plan`).value) || 0;
+                    const horas = parseFloat(document.getElementById(`${t}_horas`).value) || 0;
+                    const perdasReal = parseFloat(document.getElementById(`${t}_perdas_real`).value) || 0;
+                    const tet = parseInt(document.getElementById(`${t}_tet`).value) || 0;
+                    const r2p = parseInt(document.getElementById(`${t}_r2p`).value) || 0;
+                    const reembQtd = parseInt(document.getElementById(`${t}_reemb_qtd`).value) || 0;
+                    const reembVal = parseFloat(document.getElementById(`${t}_reemb_val`).value) || 0;
+
+                    // 1. VENDAS - DIFERENÇA
+                    const vndDif = vndReal - vndPlan;
+                    document.getElementById(`${t}_vnd_dif`).value = formatarMoeda(vndDif);
+                    aplicarCorDiferenca(`${t}_vnd_dif`, vndDif);
+
+                    // 2. GC'S - DIFERENÇA
+                    const gcsDif = gcsReal - gcsPlan;
+                    document.getElementById(`${t}_gcs_dif`).value = formatarNumero(gcsDif, 0);
+                    aplicarCorDiferenca(`${t}_gcs_dif`, gcsDif);
+
+                    // 3. BM (BILHETE MÉDIO)
+                    const bmReal = gcsReal > 0 ? vndReal / gcsReal : 0;
+                    document.getElementById(`${t}_bm_calc`).value = formatarMoeda(bmReal);
+
+                    const bmPlan = gcsPlan > 0 ? vndPlan / gcsPlan : 0;
+                    document.getElementById(`${t}_bm_plan`).value = formatarMoeda(bmPlan);
+
+                    const bmDif = bmReal - bmPlan;
+                    document.getElementById(`${t}_bm_dif`).value = formatarMoeda(bmDif);
+                    aplicarCorDiferenca(`${t}_bm_dif`, bmDif);
+
+                    // 4. HORAS
+                    const horasPlan = vndReal > 0 ? (vndReal * 0.105) / CONSTANTES.VALOR_MO : 0;
+                    document.getElementById(`${t}_horas_plan`).value = formatarNumero(horasPlan, 3);
+
+                    const horasDif = horas - horasPlan;
+                    document.getElementById(`${t}_horas_dif`).value = formatarNumero(horasDif, 3);
+                    aplicarCorDiferenca(`${t}_horas_dif`, horasDif);
+
+                    // 5. MO % (MÃO DE OBRA)
+                    const moReal = vndReal > 0 ? ((horas * CONSTANTES.VALOR_MO) / vndReal) * 100 : 0;
+                    document.getElementById(`${t}_mo_pct`).value = formatarPercentagem(moReal);
+
+                    const moDif = moReal - CONSTANTES.MO_OBJETIVO;
+                    document.getElementById(`${t}_mo_dif`).value = formatarNumero(moDif, 2);
+
+                    aplicarCorMO(`${t}_mo_pct`, moReal);
+                    aplicarCorMO(`${t}_mo_dif`, moReal);
+
+                    // 6. PERDAS
+                    const perdasPlan = vndReal * (CONSTANTES.PERDAS_PCT / 100);
+                    document.getElementById(`${t}_perdas_plan`).value = formatarMoeda(perdasPlan);
+
+                    const perdasDif = perdasReal - perdasPlan;
+                    document.getElementById(`${t}_perdas_dif`).value = formatarMoeda(perdasDif);
+                    aplicarCorDiferenca(`${t}_perdas_dif`, perdasDif);
+
+                    // 7. TET
+                    const tetDif = tet - CONSTANTES.TET_OBJETIVO;
+                    document.getElementById(`${t}_tet_dif`).value = formatarNumero(tetDif, 0);
+                    aplicarCorDiferenca(`${t}_tet_dif`, tetDif);
+
+                    // 8. R2P
+                    const r2pDif = r2p - CONSTANTES.R2P_OBJETIVO;
+                    document.getElementById(`${t}_r2p_dif`).value = formatarNumero(r2pDif, 0);
+                    aplicarCorDiferenca(`${t}_r2p_dif`, r2pDif);
+
+                    // 9. REEMBOLSOS - MÉDIA
+                    const reembMedia = reembQtd > 0 ? reembVal / reembQtd : 0;
+                    document.getElementById(`${t}_reemb_media`).value = formatarMoeda(reembMedia);
+
+                    // ATUALIZAR RESUMO DO TURNO
+                    document.getElementById(`${t}_resumo_bm`).textContent = formatarMoeda(bmReal);
+                    document.getElementById(`${t}_resumo_mo`).textContent = formatarPercentagem(moReal);
+                    document.getElementById(`${t}_resumo_mo_dif`).textContent = formatarNumero(moDif, 2);
+
+                    aplicarCorMO(`${t}_resumo_mo`, moReal);
+                    aplicarCorMO(`${t}_resumo_mo_dif`, moReal);
+                    }
+
+                    // ============= APLICAR CORES =============
+                    function aplicarCorDiferenca(elementId, valor) {
+                    const elemento = document.getElementById(elementId);
+                    if (!elemento) return;
+
+                    elemento.classList.remove('cor-verde', 'cor-vermelha');
+
+                    if (valor <= 0) { elemento.classList.add('cor-verde'); } else {
+                        elemento.classList.add('cor-vermelha'); } } function aplicarCorMO(elementId, valorMO) { const
+                        elemento=document.getElementById(elementId); if (!elemento) return;
+                        elemento.classList.remove('cor-verde', 'cor-vermelha' ); if (valorMO <=CONSTANTES.MO_OBJETIVO) {
+                        elemento.classList.add('cor-verde'); } else { elemento.classList.add('cor-vermelha'); } }
+                        //=============ATUALIZAR RESUMO DO DIA=============function atualizarResumoDia() { // Manhã
+                        const m_vendas=parseFloat(document.getElementById('m_vnd_real').value) || 0; const
+                        m_gcs=parseInt(document.getElementById('m_gcs_real').value) || 0; const
+                        m_horas=parseFloat(document.getElementById('m_horas').value) || 0; // Noite const
+                        n_vendas=parseFloat(document.getElementById('n_vnd_real').value) || 0; const
+                        n_gcs=parseInt(document.getElementById('n_gcs_real').value) || 0; const
+                        n_horas=parseFloat(document.getElementById('n_horas').value) || 0; // Totais const
+                        vendas_total=m_vendas + n_vendas; const gcs_total=m_gcs + n_gcs; const horas_total=m_horas +
+                        n_horas; const bm_medio=gcs_total> 0 ? vendas_total / gcs_total : 0;
+
+                        // MO Dia
+                        const mo_dia = vendas_total > 0 ? ((horas_total * CONSTANTES.VALOR_MO) / vendas_total) * 100 :
+                        0;
+
+                        document.getElementById('resumo-vendas').textContent = formatarMoeda(vendas_total);
+                        document.getElementById('resumo-gcs').textContent = formatarNumero(gcs_total, 0);
+                        document.getElementById('resumo-bm').textContent = formatarMoeda(bm_medio);
+                        document.getElementById('resumo-mo').textContent = formatarPercentagem(mo_dia);
+                        document.getElementById('resumo-dia-numero').textContent = estado.diaAtual;
+                        document.getElementById('resumo-mes-nome').textContent = CONSTANTES.MESES[estado.mesAtual];
+                        }
+
+                        // ============= ADICIONAR LISTENERS AOS CAMPOS =============
+                        function inicializarCampos() {
+                        const camposManha = [
+                        'm_vnd_real', 'm_vnd_plan', 'm_gcs_real', 'm_gcs_plan',
+
+                        'm_horas', 'm_perdas_real', 'm_perdas_mn', 'm_desinv',
+                        'm_tet', 'm_r2p', 'm_reemb_qtd', 'm_reemb_val', 'm_gerente'
+                        ];
+
+                        const camposNoite = [
+                        'n_vnd_real', 'n_vnd_plan', 'n_gcs_real', 'n_gcs_plan',
+                        'n_horas', 'n_perdas_real', 'n_perdas_mn', 'n_desinv',
+                        'n_tet', 'n_r2p', 'n_reemb_qtd', 'n_reemb_val', 'n_gerente'
+                        ];
+
+                        camposManha.forEach(campoId => {
+                        const campo = document.getElementById(campoId);
+                        if (campo) {
+                        campo.addEventListener('input', () => {
+                        calcularCampos('m');
+                        atualizarResumoDia();
+                        autoSalvar();
+                        });
+                        }
+                        });
+
+                        camposNoite.forEach(campoId => {
+                        const campo = document.getElementById(campoId);
+                        if (campo) {
+                        campo.addEventListener('input', () => {
+                        calcularCampos('n');
+                        atualizarResumoDia();
+                        autoSalvar();
+                        });
+                        }
+                        });
+                        }
+
+
+
+
+
+
+
+
+                        // ============= FUNÇÃO DE TESTE =============
+                        function testarCalculos() {
+                        document.getElementById('m_gerente').value = 'William';
+                        document.getElementById('m_vnd_real').value = 23154.36;
+                        document.getElementById('m_vnd_plan').value = 21458.36;
+                        document.getElementById('m_gcs_real').value = 1434;
+                        document.getElementById('m_gcs_plan').value = 1344;
+                        document.getElementById('m_horas').value = 295;
+                        document.getElementById('m_perdas_real').value = 76;
+                        document.getElementById('m_tet').value = 519;
+                        document.getElementById('m_r2p').value = 208;
+                        document.getElementById('m_reemb_qtd').value = 17;
+                        document.getElementById('m_reemb_val').value = 160.60;
+
+                        calcularCampos('m');
+                        atualizarResumoDia();
+
+                        console.log('✅ Dados de teste carregados!');
+                        console.log('- BM Manhã deve ser ≈ 16,14€');
+                        console.log('- MO Manhã deve ser ≈ 9,43%');
+                        console.log('- Horas Plan deve ser ≈ 328,298');
+                        }
+
+                        // ============= INICIALIZAR BOTÕES =============
+                        function inicializarBotoes() {
+                        // Botão Guardar
+                        const btnGuardar = document.getElementById('btn-guardar');
+                        if (btnGuardar) {
+                        btnGuardar.addEventListener('click', () => {
+                        salvarDadosDia();
+                        alert('Dados guardados com sucesso! ✓');
+                        });
+                        }
+
+                        // Botão Limpar
+                        const btnLimpar = document.getElementById('btn-limpar');
+                        if (btnLimpar) {
+                        btnLimpar.addEventListener('click', limparDadosDia);
+                        }
+
+                        // Botão Exportar
+                        const btnExportar = document.getElementById('btn-exportar');
+                        if (btnExportar) {
+                        btnExportar.addEventListener('click', exportarBackup);
+                        }
+
+                        // Botão Importar
+                        const btnImportar = document.getElementById('btn-importar');
+                        if (btnImportar) {
+                        btnImportar.addEventListener('click', importarBackup);
+                        }
+                        }
+
+
+                        // ============= FUNÇÕES DE NAVEGAÇÃO =============
+                        function selecionarMes(mesIndex) {
+                        estado.mesAtual = mesIndex;
+                        const maxDias = CONSTANTES.DIAS_NO_MES[mesIndex];
+                        if (estado.diaAtual > maxDias) {
+                        estado.diaAtual = maxDias;
+                        }
+                        atualizarInterface();
+                        carregarDadosDia(); // CARREGAR DADOS DO NOVO MÊS
+                        }
+
+                        function selecionarDia(dia) {
+                        estado.diaAtual = dia;
+                        atualizarInterface();
+                        carregarDadosDia(); // CARREGAR DADOS DO NOVO DIA
+                        }
+
+                        function diaAnterior() {
+                        if (estado.diaAtual > 1) {
+                        selecionarDia(estado.diaAtual - 1);
+                        }
+                        }
+
+                        function proximoDia() {
+                        const maxDias = CONSTANTES.DIAS_NO_MES[estado.mesAtual];
+                        if (estado.diaAtual < maxDias) { selecionarDia(estado.diaAtual + 1); } } function
+                            selecionarTab(nomeTab) { estado.tabAtual=nomeTab; atualizarInterface(); }
+                            //=============ATUALIZAR INTERFACE=============function atualizarInterface() {
+                            document.querySelectorAll('.btn-mes').forEach((btn, index)=> {
+                            btn.classList.toggle('ativo', index === estado.mesAtual);
+                            });
+
+                            const maxDias = CONSTANTES.DIAS_NO_MES[estado.mesAtual];
+                            document.querySelectorAll('.btn-dia').forEach((btn, index) => {
+                            const dia = index + 1;
+                            btn.style.display = dia <= maxDias ? 'inline-block' : 'none' ; btn.classList.toggle('ativo',
+                                dia===estado.diaAtual); }); const
+                                btnAnterior=document.getElementById('btn-dia-anterior'); const
+                                btnProximo=document.getElementById('btn-dia-proximo');
+                                btnAnterior.disabled=estado.diaAtual===1; btnProximo.disabled=estado.diaAtual===maxDias;
+                                document.querySelectorAll('.btn-tab').forEach(btn=> {
+                                btn.classList.toggle('ativo', btn.dataset.tab === estado.tabAtual);
+                                });
+
+                                document.querySelectorAll('.tab-conteudo').forEach(conteudo => {
+                                conteudo.classList.toggle('ativo', conteudo.id === `tab-${estado.tabAtual}`);
+                                });
+                                }
+
+                                // ============= ATALHOS DE TECLADO =============
+                                document.addEventListener('keydown', (e) => {
+                                if (e.key === 'ArrowLeft') {
+                                e.preventDefault();
+                                diaAnterior();
+                                }
+                                if (e.key === 'ArrowRight') {
+                                e.preventDefault();
+                                proximoDia();
+                                }
+                                });
+
+                                // ============= INICIALIZAÇÃO =============
+                                document.addEventListener('DOMContentLoaded', () => {
+                                const containerMeses = document.getElementById('navegacao-meses');
+                                CONSTANTES.MESES.forEach((mes, index) => {
+                                const btn = document.createElement('button');
+                                btn.className = 'btn-mes';
+                                btn.textContent = mes;
+                                btn.onclick = () => selecionarMes(index);
+                                containerMeses.appendChild(btn);
+                                });
+
+                                const containerDias = document.getElementById('navegacao-dias-container');
+                                for (let dia = 1; dia <= 31; dia++) { const btn=document.createElement('button');
+                                    btn.className='btn-dia' ; btn.textContent=dia; btn.onclick=()=> selecionarDia(dia);
+                                    containerDias.appendChild(btn);
+                                    }
+
+                                    atualizarInterface();
+                                    inicializarCampos();
+                                    atualizarResumoDia();
+                                    inicializarBotoes();
+                                    inicializarTabAnalise();
+                                    carregarDadosDia();
+                                    });
+                                    </script>
+</body>
+
+</html>

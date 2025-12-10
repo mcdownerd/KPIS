@@ -1,0 +1,201 @@
+<!-- CARTÃO NOITE - COPIAR ESTE CONTEÚDO -->
+<div class="turno-card">
+    <div class="turno-header turno-noite">
+        <h2>🌙 TURNO DA NOITE</h2>
+    </div>
+
+    <div class="turno-corpo">
+        <!-- 1. GERENTE -->
+        <div class="campo-grupo">
+            <label class="campo-label">GERENTE</label>
+            <select class="campo-input editavel" id="n_gerente">
+                <option value="">Selecionar...</option>
+                <option value="Bruna">Bruna</option>
+                <option value="Isaac">Isaac</option>
+                <option value="Isabel">Isabel</option>
+                <option value="Janice">Janice</option>
+                <option value="Uilson">Uilson</option>
+                <option value="William">William</option>
+            </select>
+        </div>
+
+        <!-- 2. VENDAS (16H) -->
+        <div class="campo-grupo">
+            <label class="campo-label">VENDAS (16H)</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_vnd_real" placeholder="Real" step="0.01">
+                </div>
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_vnd_plan" placeholder="Planificado"
+                        step="0.01">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_vnd_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. GC'S -->
+        <div class="campo-grupo">
+            <label class="campo-label">GC'S</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_gcs_real" placeholder="Real" step="1">
+                </div>
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_gcs_plan" placeholder="Planificado"
+                        step="1">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_gcs_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. BM -->
+        <div class="campo-grupo">
+            <label class="campo-label">BM (BILHETE MÉDIO)</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_bm_calc" placeholder="Calculado" readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_bm_plan" placeholder="Planificado" readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_bm_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. HORAS -->
+        <div class="campo-grupo">
+            <label class="campo-label">HORAS</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_horas" placeholder="Real" step="0.001">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_horas_plan" placeholder="Planificado"
+                        readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_horas_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. MO % -->
+        <div class="campo-grupo">
+            <label class="campo-label">MO %</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_mo_pct" placeholder="Real" readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_mo_obj" value="10,50%" readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_mo_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. PERDAS -->
+        <div class="campo-grupo">
+            <label class="campo-label">PERDAS</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_perdas_real" placeholder="Real" step="0.01">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_perdas_plan" placeholder="Planificado"
+                        readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_perdas_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. PERDAS M/N -->
+        <div class="campo-grupo">
+            <label class="campo-label">PERDAS M/N</label>
+            <input type="number" class="campo-input editavel" id="n_perdas_mn" placeholder="Valor" step="0.01">
+        </div>
+
+        <!-- 9. DESVIO INVENTÁRIO -->
+        <div class="campo-grupo">
+            <label class="campo-label">DESVIO INVENTÁRIO</label>
+            <input type="number" class="campo-input editavel" id="n_desinv" placeholder="Valor" step="0.01">
+        </div>
+
+        <!-- 10. TET -->
+        <div class="campo-grupo">
+            <label class="campo-label">TET (segundos)</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_tet" placeholder="Real" step="1">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_tet_obj" value="Objectivo 150&quot;"
+                        readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_tet_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. R2P -->
+        <div class="campo-grupo">
+            <label class="campo-label">R2P (segundos)</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_r2p" placeholder="Real" step="1">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_r2p_obj" value="Objectivo 90&quot;" readonly>
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_r2p_dif" placeholder="Diferença" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. REEMBOLSOS -->
+        <div class="campo-grupo">
+            <label class="campo-label">REEMBOLSOS</label>
+            <div class="campo-linha">
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_reemb_qtd" placeholder="Quantidade"
+                        step="1">
+                </div>
+                <div class="campo-coluna">
+                    <input type="number" class="campo-input editavel" id="n_reemb_val" placeholder="Valor €"
+                        step="0.01">
+                </div>
+                <div class="campo-coluna">
+                    <input type="text" class="campo-input calculado" id="n_reemb_media" placeholder="Média" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESUMO DO TURNO -->
+        <div class="turno-resumo">
+            <div class="resumo-item">
+                <div class="resumo-item-label">BM</div>
+                <div class="resumo-item-valor" id="n_resumo_bm">€0,00</div>
+            </div>
+            <div class="resumo-item">
+                <div class="resumo-item-label">MO</div>
+                <div class="resumo-item-valor" id="n_resumo_mo">0,00%</div>
+            </div>
+            <div class="resumo-item">
+                <div class="resumo-item-label">DIF MO</div>
+                <div class="resumo-item-valor" id="n_resumo_mo_dif">0,00</div>
+            </div>
+        </div>
+    </div>
+</div>
