@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import { LoginPage } from "./pages/Login";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import StoreDashboard from "./pages/StoreDashboard";
+import ShiftManagement from "./pages/ShiftManagement";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/utilities" element={<ProtectedRoute requireStore><Utilities /></ProtectedRoute>} />
             <Route path="/cash-register" element={<ProtectedRoute requireStore><DeliveryCashSheet /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/shift-management" element={<ProtectedRoute requireStore><ShiftManagement /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
