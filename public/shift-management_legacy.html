@@ -1601,139 +1601,7 @@
         </div>
     </div>
 
-    <script>
-        // ============= TEMA (DARK/LIGHT) =============
-        const btnTema = document.getElementById('btn-tema');
-        const body = document.body;
-
-        // Carregar preferência salva ou do sistema
-        const savedTheme = localStorage.getItem('vite-ui-theme');
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        // Determinar se deve usar modo escuro
-        let shouldUseDark = false;
-        if (savedTheme === 'dark') {
-            shouldUseDark = true;
-        } else if (savedTheme === 'system' || !savedTheme) {
-            shouldUseDark = systemDark;
-        }
-        
-        if (shouldUseDark) {
-            body.classList.add('dark-mode');
-            if (btnTema) btnTema.textContent = '☀️';
-        }
-
-        if (btnTema) {
-            btnTema.addEventListener('click', () => {
-                body.classList.toggle('dark-mode');
-                const isDark = body.classList.contains('dark-mode');
-                btnTema.textContent = isDark ? '☀️' : '🌙';
-                localStorage.setItem('vite-ui-theme', isDark ? 'dark' : 'light');
-            });
-        }
-
-        const CONSTANTES = {
-            MO_OBJETIVO: 10.5,
-            VALOR_MO: 7.4,
-            TET_OBJETIVO: 150,
-            R2P_OBJETIVO: 90,
-            PERDAS_PCT: 0.5,
-
-            GERENTES: ["Bruna", "Isaac", "Isabel", "Janice", "Uilson", "William"],
-
-            CORES_GERENTES: {
-                "Bruna": "#EC4899",
-                "Isaac": "#F97316",
-                "Isabel": "#14B8A6",
-                "Janice": "#8B5CF6",
-                "Uilson": "#06B6D4",
-                "William": "#10B981"
-            },
-
-            MESES: [
-                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-            ],
-
-            DIAS_NO_MES: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-        };
-
-        // ============= ESTADO GLOBAL =============
-        let estado = {
-            mesAtual: 0,
-            diaAtual: 1,
-            tabAtual: 'entrada'
-        };
-
-                function formatarMoeda(valor) {
-                if (isNaN(valor) || valor === null) return '0,00 €';
-                return new Intl.NumberFormat('pt-PT', {
-                style: 'currency',
-                currency: 'EUR',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-                }).format(valor);
-                }
-
-                function formatarNumero(valor, decimais = 0) {
-                if (isNaN(valor) || valor === null) return '-';
-                return new Intl.NumberFormat('pt-PT', {
-                minimumFractionDigits: decimais,
-                maximumFractionDigits: decimais
-                }).format(valor);
-                }
-
-                function formatarPercentagem(valor) {
-                if (isNaN(valor) || valor === null) return '0,00%';
-                return new Intl.NumberFormat('pt-PT', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-                }).format(valor) + '%';
-                }
-
-                // ============= CHAVE DO localStorage =============
-                const STORAGE_KEY = 'turnosData';
-
-                // ============= OBTER TODOS OS DADOS =============
-                function obterTodosDados() {
-                const dados = localStorage.getItem(STORAGE_KEY);
-                return dados ? JSON.parse(dados) : {};
-                }
-
-                // ============= SALVAR TODOS OS DADOS =============
-                function salvarTodosDados(dados) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
-                }
-
-                // ============= OBTER CHAVE DO DIA ATUAL =============
-                function obterChaveDia() {
-                return `${estado.mesAtual}-${estado.diaAtual}`;
-                }
-
-                // ============= CARREGAR DADOS DO DIA =============
-                function carregarDadosDia() {
-                const chave = obterChaveDia();
-                const todosDados = obterTodosDados();
-                const dadosDia = todosDados[chave] || {};
-
-                console.log(`📂 Carregando: ${CONSTANTES.MESES[estado.mesAtual]} - Dia ${estado.diaAtual}`);
-
-                // Lista de todos os campos
-                const campos = [
-                // Manhã
-                'm_gerente', 'm_vnd_real', 'm_vnd_plan', 'm_gcs_real', 'm_gcs_plan',
-                'm_horas', 'm_perdas_real', 'm_perdas_mn', 'm_desinv',
-                'm_tet', 'm_r2p', 'm_reemb_qtd', 'm_reemb_val'
-                ];
-
-                // Carregar valores nos campos
-                campos.forEach(campoId => {
-                const elemento = document.getElementById(campoId);
-                if (elemento) {
-                const valor = dadosDia[campoId];
-                elemento.value = valor !== undefined && valor !== null ? valor : '';
-                }
-                });
+    <script>);
 
                 // Recalcular após carregar
                 calcularCampos('m');
@@ -2386,7 +2254,48 @@
                                 });
 
                                 // ============= INICIALIZAÇÃO =============
-                                document.addEventListener('DOMContentLoaded', () => {
+                                
+        function initApp() {
+            console.log('🚀 Inicializando aplicação...');
+            
+            // ============= TEMA (DARK/LIGHT) =============
+            const btnTema = document.getElementById('btn-tema');
+            const body = document.body;
+
+            // Carregar preferência salva ou do sistema
+            const savedTheme = localStorage.getItem('vite-ui-theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // Determinar se deve usar modo escuro
+            let shouldUseDark = false;
+            if (savedTheme === 'dark') {
+                shouldUseDark = true;
+            } else if (savedTheme === 'system' || !savedTheme) {
+                shouldUseDark = systemDark;
+            }
+            
+            if (shouldUseDark) {
+                body.classList.add('dark-mode');
+                if (btnTema) btnTema.textContent = '☀️';
+            }
+
+            if (btnTema) {
+                btnTema.addEventListener('click', () => {
+                    body.classList.toggle('dark-mode');
+                    const isDark = body.classList.contains('dark-mode');
+                    btnTema.textContent = isDark ? '☀️' : '🌙';
+                    localStorage.setItem('vite-ui-theme', isDark ? 'dark' : 'light');
+                
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    
+            }
+
                                 const containerMeses = document.getElementById('navegacao-meses');
                                 CONSTANTES.MESES.forEach((mes, index) => {
                                 const btn = document.createElement('button');
