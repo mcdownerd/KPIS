@@ -33,7 +33,7 @@ const App = () => (
             <Route path="/cash-register" element={<ProtectedRoute requireStore><DeliveryCashSheet /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
             <Route path="/shift-management" element={<ProtectedRoute requireStore><ShiftManagement /></ProtectedRoute>} />
-            {/* Force rebuild: v2 */}
+            <Route path="/shift-management.html" element={<Navigate to="/shift-management" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
