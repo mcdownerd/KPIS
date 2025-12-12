@@ -512,6 +512,9 @@ const ShiftManagement = () => {
                     <TabsTrigger value="analise" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-base">
                         👥 Análise Gerentes
                     </TabsTrigger>
+                    <TabsTrigger value="anual" className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-base">
+                        📅 Resumo Anual
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="tabela">
@@ -613,6 +616,105 @@ const ShiftManagement = () => {
                                 <p>Sem dados registados para este mês.</p>
                             </div>
                         )}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="anual">
+                    <div className="bg-[#2D3748] p-6 rounded-xl">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {CONSTANTES.GERENTES.map(gerente => {
+                                const s = analiseGerentes[gerente];
+                                const cor = CONSTANTES.CORES_GERENTES[gerente as keyof typeof CONSTANTES.CORES_GERENTES];
+
+                                return (
+                                    <div key={gerente} className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-lg">
+                                        <div className="p-3 text-center font-bold uppercase text-sm" style={{ backgroundColor: cor, color: '#1f2937' }}>
+                                            {gerente}
+                                        </div>
+                                        {s.turnos === 0 ? (
+                                            <div className="p-8 text-center text-gray-400">
+                                                <div className="text-3xl mb-2">📭</div>
+                                                <div className="text-sm">Sem dados</div>
+                                            </div>
+                                        ) : (
+                                            <table className="w-full text-xs">
+                                                <thead>
+                                                    <tr className="bg-gray-100 dark:bg-gray-800">
+                                                        <th className="p-2 text-left border-b-2 border-gray-300 dark:border-gray-600"></th>
+                                                        <th className="p-2 text-center border-b-2 border-gray-300 dark:border-gray-600 font-bold">Manhã</th>
+                                                        <th className="p-2 text-center border-b-2 border-gray-300 dark:border-gray-600 font-bold">Noite</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td className="p-2 font-semibold">Vendas</td>
+                                                        <td className="p-2 text-center">{s.manha.turnos > 0 ? formatarMoeda(s.manha.vendas) : '-'}</td>
+                                                        <td className="p-2 text-center">{s.noite.turnos > 0 ? formatarMoeda(s.noite.vendas) : '-'}</td>
+                                                    </tr>
+                                                    <tr className="bg-gray-50 dark:bg-gray-800/50">
+                                                        <td className="p-2 font-semibold">GC's</td>
+                                                        <td className="p-2 text-center">{s.manha.turnos > 0 ? formatarNumero(s.manha.gcs) : '-'}</td>
+                                                        <td className="p-2 text-center">{s.noite.turnos > 0 ? formatarNumero(s.noite.gcs) : '-'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="p-2 font-semibold">BM</td>
+                                                        <td className="p-2 text-center">{s.manha.turnos > 0 ? formatarMoeda(s.manha.bm) : '-'}</td>
+                                                        <td className="p-2 text-center">{s.noite.turnos > 0 ? formatarMoeda(s.noite.bm) : '-'}</td>
+                                                    </tr>
+                                                    <tr className="bg-gray-50 dark:bg-gray-800/50">
+                                                        <td className="p-2 font-semibold">Horas</td>
+                                                        <td className="p-2 text-center">{s.manha.turnos > 0 ? formatarNumero(s.manha.horas, 0) : '-'}</td>
+                                                        <td className="p-2 text-center">{s.noite.turnos > 0 ? formatarNumero(s.noite.horas, 0) : '-'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="p-2 font-semibold">MO</td>
+                                                        <td className={`p-2 text-center font-bold ${s.manha.turnos > 0 ? (s.manha.mo <= CONSTANTES.MO_OBJETIVO ? 'text-green-600' : 'text-red-600') : ''}`}>
+                                                            {s.manha.turnos > 0 ? formatarPercentagem(s.manha.mo) : '-'}
+                                                        </td>
+                                                        <td className={`p-2 text-center font-bold ${s.noite.turnos > 0 ? (s.noite.mo <= CONSTANTES.MO_OBJETIVO ? 'text-green-600' : 'text-red-600') : ''}`}>
+                                                            {s.noite.turnos > 0 ? formatarPercentagem(s.noite.mo) : '-'}
+                                                        </td>
+                                                    </tr>
+                                                    <tr className="bg-gray-50 dark:bg-gray-800/50">
+                                                        <td className="p-2 font-semibold">Perdas</td>
+                                                        <td className="p-2 text-center">{s.manha.turnos > 0 ? formatarMoeda(s.manha.perdas) : '-'}</td>
+                                                        <td className="p-2 text-center">{s.noite.turnos > 0 ? formatarMoeda(s.noite.perdas) : '-'}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="p-2 font-semibold">Perdas %</td>
+                                                        <td className="p-2 text-center">{s.manha.turnos > 0 ? formatarPercentagem(s.manha.perdasPct) : '-'}</td>
+                                                        <td className="p-2 text-center">{s.noite.turnos > 0 ? formatarPercentagem(s.noite.perdasPct) : '-'}</td>
+                                                    </tr>
+                                                    <tr className="bg-gray-50 dark:bg-gray-800/50">
+                                                        <td className="p-2 font-semibold">TET</td>
+                                                        <td className={`p-2 text-center ${s.manha.turnos > 0 && s.manha.tetMedio > 0 ? (s.manha.tetMedio <= CONSTANTES.TET_OBJETIVO ? 'text-green-600' : 'text-red-600') : ''}`}>
+                                                            {s.manha.turnos > 0 && s.manha.tetMedio > 0 ? `${formatarNumero(s.manha.tetMedio, 0)}"` : '-'}
+                                                        </td>
+                                                        <td className={`p-2 text-center ${s.noite.turnos > 0 && s.noite.tetMedio > 0 ? (s.noite.tetMedio <= CONSTANTES.TET_OBJETIVO ? 'text-green-600' : 'text-red-600') : ''}`}>
+                                                            {s.noite.turnos > 0 && s.noite.tetMedio > 0 ? `${formatarNumero(s.noite.tetMedio, 0)}"` : '-'}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td className="p-2 font-semibold">R2P</td>
+                                                        <td className={`p-2 text-center ${s.manha.turnos > 0 && s.manha.r2pMedio > 0 ? (s.manha.r2pMedio <= CONSTANTES.R2P_OBJETIVO ? 'text-green-600' : 'text-red-600') : ''}`}>
+                                                            {s.manha.turnos > 0 && s.manha.r2pMedio > 0 ? `${formatarNumero(s.manha.r2pMedio, 0)}"` : '-'}
+                                                        </td>
+                                                        <td className={`p-2 text-center ${s.noite.turnos > 0 && s.noite.r2pMedio > 0 ? (s.noite.r2pMedio <= CONSTANTES.R2P_OBJETIVO ? 'text-green-600' : 'text-red-600') : ''}`}>
+                                                            {s.noite.turnos > 0 && s.noite.r2pMedio > 0 ? `${formatarNumero(s.noite.r2pMedio, 0)}"` : '-'}
+                                                        </td>
+                                                    </tr>
+                                                    <tr className="bg-gray-200 dark:bg-gray-700">
+                                                        <td className="p-2 font-semibold">Turnos</td>
+                                                        <td className="p-2 text-center font-bold">{s.manha.turnos}</td>
+                                                        <td className="p-2 text-center font-bold">{s.noite.turnos}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </TabsContent>
             </Tabs>
