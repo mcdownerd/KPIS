@@ -330,7 +330,7 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600" colSpan={4}>
                                 <Select value={dadosDia[`${prefix}_gerente`] || ''} onValueChange={(v) => handleInputChange(`${prefix}_gerente`, v)}>
-                                    <SelectTrigger className="h-7 text-xs bg-yellow-50 dark:bg-yellow-900/10">
+                                    <SelectTrigger className="h-7 text-xs bg-[#FFF8DC] dark:bg-[#3a3a2a]">
                                         <SelectValue placeholder="Selecione..." />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -342,20 +342,20 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">Vendas (€m)</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_vnd_real_${chaveDia}`} defaultValue={dadosDia[`${prefix}_vnd_real`] || ''} onBlur={(e) => handleInputChange(`${prefix}_vnd_real`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_vnd_real_${chaveDia}`} defaultValue={dadosDia[`${prefix}_vnd_real`] || ''} onBlur={(e) => handleInputChange(`${prefix}_vnd_real`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_vnd_plan_${chaveDia}`} defaultValue={dadosDia[`${prefix}_vnd_plan`] || ''} onBlur={(e) => handleInputChange(`${prefix}_vnd_plan`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Plan" key={`${prefix}_vnd_plan_${chaveDia}`} defaultValue={dadosDia[`${prefix}_vnd_plan`] || ''} onBlur={(e) => handleInputChange(`${prefix}_vnd_plan`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className={`p-1 text-right text-xs font-bold ${calc.vndDif >= 0 ? 'text-green-600' : 'text-red-600'}`}>{calc.vndDif.toFixed(0)}</td>
                         </tr>
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">GC's</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_gcs_real_${chaveDia}`} defaultValue={dadosDia[`${prefix}_gcs_real`] || ''} onBlur={(e) => handleInputChange(`${prefix}_gcs_real`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_gcs_real_${chaveDia}`} defaultValue={dadosDia[`${prefix}_gcs_real`] || ''} onBlur={(e) => handleInputChange(`${prefix}_gcs_real`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_gcs_plan_${chaveDia}`} defaultValue={dadosDia[`${prefix}_gcs_plan`] || ''} onBlur={(e) => handleInputChange(`${prefix}_gcs_plan`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Plan" key={`${prefix}_gcs_plan_${chaveDia}`} defaultValue={dadosDia[`${prefix}_gcs_plan`] || ''} onBlur={(e) => handleInputChange(`${prefix}_gcs_plan`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className={`p-1 text-right text-xs font-bold ${calc.gcsDif >= 0 ? 'text-green-600' : 'text-red-600'}`}>{calc.gcsDif.toFixed(0)}</td>
                         </tr>
@@ -368,7 +368,7 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">Horas</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_horas_${chaveDia}`} defaultValue={dadosDia[`${prefix}_horas`] || ''} onBlur={(e) => handleInputChange(`${prefix}_horas`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_horas_${chaveDia}`} defaultValue={dadosDia[`${prefix}_horas`] || ''} onBlur={(e) => handleInputChange(`${prefix}_horas`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 text-right text-xs border-r border-gray-300 dark:border-gray-600">{formatarNumero(calc.horasPlan, 2)}</td>
                             <td className={`p-1 text-right text-xs font-bold ${calc.horasDif <= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatarNumero(calc.horasDif, 2)}</td>
@@ -382,7 +382,7 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">Perdas</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_perdas_real_${chaveDia}`} defaultValue={dadosDia[`${prefix}_perdas_real`] || ''} onBlur={(e) => handleInputChange(`${prefix}_perdas_real`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_perdas_real_${chaveDia}`} defaultValue={dadosDia[`${prefix}_perdas_real`] || ''} onBlur={(e) => handleInputChange(`${prefix}_perdas_real`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 text-right text-xs border-r border-gray-300 dark:border-gray-600">{formatarMoeda(calc.perdasPlan)}</td>
                             <td className={`p-1 text-right text-xs font-bold ${calc.perdasDif <= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatarMoeda(calc.perdasDif)}</td>
@@ -390,7 +390,7 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">Des Inventario</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_desinv_${chaveDia}`} defaultValue={dadosDia[`${prefix}_desinv`] || ''} onBlur={(e) => handleInputChange(`${prefix}_desinv`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_desinv_${chaveDia}`} defaultValue={dadosDia[`${prefix}_desinv`] || ''} onBlur={(e) => handleInputChange(`${prefix}_desinv`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 text-right text-xs border-r border-gray-300 dark:border-gray-600">€</td>
                             <td className="p-1 text-right text-xs">{formatarMoeda(dadosDia[`${prefix}_desinv`] || 0)}</td>
@@ -398,7 +398,7 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">TET</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_tet_${chaveDia}`} defaultValue={dadosDia[`${prefix}_tet`] || ''} onBlur={(e) => handleInputChange(`${prefix}_tet`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_tet_${chaveDia}`} defaultValue={dadosDia[`${prefix}_tet`] || ''} onBlur={(e) => handleInputChange(`${prefix}_tet`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 text-right text-xs border-r border-gray-300 dark:border-gray-600">{CONSTANTES.TET_OBJETIVO}</td>
                             <td className={`p-1 text-right text-xs font-bold ${calc.tetDif <= 0 ? 'text-green-600' : 'text-red-600'}`}>{calc.tetDif.toFixed(0)}</td>
@@ -406,7 +406,7 @@ const ShiftManagement = () => {
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">R2P</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_r2p_${chaveDia}`} defaultValue={dadosDia[`${prefix}_r2p`] || ''} onBlur={(e) => handleInputChange(`${prefix}_r2p`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" placeholder="Real" key={`${prefix}_r2p_${chaveDia}`} defaultValue={dadosDia[`${prefix}_r2p`] || ''} onBlur={(e) => handleInputChange(`${prefix}_r2p`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 text-right text-xs border-r border-gray-300 dark:border-gray-600">{CONSTANTES.R2P_OBJETIVO}</td>
                             <td className={`p-1 text-right text-xs font-bold ${calc.r2pDif <= 0 ? 'text-green-600' : 'text-red-600'}`}>{calc.r2pDif.toFixed(0)}</td>
@@ -414,10 +414,10 @@ const ShiftManagement = () => {
                         <tr>
                             <td className="p-1 font-medium border-r border-gray-300 dark:border-gray-600">Reembolsos</td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_reemb_qtd_${chaveDia}`} placeholder="Qtd" defaultValue={dadosDia[`${prefix}_reemb_qtd`] || ''} onBlur={(e) => handleInputChange(`${prefix}_reemb_qtd`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" key={`${prefix}_reemb_qtd_${chaveDia}`} placeholder="Qtd" defaultValue={dadosDia[`${prefix}_reemb_qtd`] || ''} onBlur={(e) => handleInputChange(`${prefix}_reemb_qtd`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 border-r border-gray-300 dark:border-gray-600">
-                                <Input type="number" key={`${prefix}_reemb_val_${chaveDia}`} placeholder="Valor" defaultValue={dadosDia[`${prefix}_reemb_val`] || ''} onBlur={(e) => handleInputChange(`${prefix}_reemb_val`, e.target.value)} className="h-7 text-xs text-right bg-yellow-50 dark:bg-yellow-900/10" />
+                                <Input type="number" key={`${prefix}_reemb_val_${chaveDia}`} placeholder="Valor" defaultValue={dadosDia[`${prefix}_reemb_val`] || ''} onBlur={(e) => handleInputChange(`${prefix}_reemb_val`, e.target.value)} className="h-7 text-xs text-right bg-[#FFF8DC] dark:bg-[#3a3a2a]" />
                             </td>
                             <td className="p-1 text-right text-xs">{formatarMoeda(calc.reembMedia)}</td>
                         </tr>
