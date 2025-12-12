@@ -35,7 +35,7 @@ const StoreDashboard = () => {
         {
             title: "Informação de turno",
             icon: Users,
-            path: "/shift-management.html",
+            path: "/shift-management",
             color: "bg-[#FFC72C]",
         },
         {
@@ -62,13 +62,7 @@ const StoreDashboard = () => {
                     {visibleMenuItems.map((item, index) => (
                         <button
                             key={index}
-                            onClick={() => {
-                                if (item.path.endsWith('.html')) {
-                                    window.location.href = item.path;
-                                } else {
-                                    navigate(item.path);
-                                }
-                            }}
+                            onClick={() => navigate(item.path)}
                             className={`${item.color} group relative flex h-48 w-full flex-col items-center justify-center rounded-lg shadow-md transition-all hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2`}
                         >
                             <div className="mb-4 rounded-full border-2 border-black p-3 transition-transform group-hover:scale-110">
