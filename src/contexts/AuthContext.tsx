@@ -68,8 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = onAuthStateChange(async (event, session) => {
             if (!mountedRef.current) return;
 
-            // console.log('[AuthProvider] Event:', event) // Reduced logging
-
             if (session?.user) {
                 const userId = session.user.id
                 const isSameUser = userId === lastUserIdRef.current
@@ -77,15 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setUser(session.user)
                 lastUserIdRef.current = userId
 
-                // Only fetch profile if:
-                // 1. User changed
-                // 2. Profile not loaded yet
-                // 3. Explicit SIGNED_IN event (might be a re-login)
-                // We ignore INITIAL_SESSION if we already have the profile/same user to avoid double fetch with the initial check
-                const shouldFetchProfile = !isSameUser || !profileLoadedRef.current || event === 'SIGNED_IN';
+                // Determine if we need to fetch the profile
+                const needsInitialFetch = !isSameUser || !profileLoadedRef.current;
+                // Revalidation happens on SIGNED_IN event for existing user (e.g. window focus)
+                const isRevalidation = isSameUser && profileLoadedRef.current && event === 'SIGNED_IN';
 
-                if (shouldFetchProfile) {
-                    if (event !== 'TOKEN_REFRESHED') setLoading(true)
+                if (needsInitialFetch || isRevalidation) {
+                    // Only set loading to true if it's an initial fetch (new user or first load)
+                    // Do NOT set loading for revalidations (window focus) or token refreshes
+                    if (needsInitialFetch && event !== 'TOKEN_REFRESHED') {
+                        setLoading(true)
+                    }
 
                     try {
                         // Race condition protection
@@ -111,7 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             setProfile(mapSupabaseUserToProfile(session.user))
                         }
                     } finally {
-                        if (mountedRef.current) setLoading(false)
+                        // Only turn off loading if we turned it on
+                        if (mountedRef.current && needsInitialFetch) {
+                            setLoading(false)
+                        }
                     }
                 }
             } else if (event === 'SIGNED_OUT') {
