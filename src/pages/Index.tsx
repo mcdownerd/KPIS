@@ -72,25 +72,28 @@ const Index = () => {
 
             {/* Navigation buttons - horizontal scroll on mobile */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-              <Link to="/" className="flex-shrink-0">
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground flex-shrink-0" asChild>
+                <Link to="/">
                   <Home className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/products" className="flex-shrink-0">
-                <Button variant="outline" size="sm">
+                </Link>
+              </Button>
+
+              <Button variant="outline" size="sm" className="flex-shrink-0" asChild>
+                <Link to="/products">
                   <Calendar className="mr-1 md:mr-2 h-4 w-4" />
                   <span className="hidden sm:inline">Gestão de Validade</span>
                   <span className="sm:hidden">Validade</span>
-                </Button>
-              </Link>
-              <Link to="/utilities" className="flex-shrink-0">
-                <Button variant="outline" size="sm">
+                </Link>
+              </Button>
+
+              <Button variant="outline" size="sm" className="flex-shrink-0" asChild>
+                <Link to="/utilities">
                   <Zap className="mr-1 md:mr-2 h-4 w-4" />
                   <span className="hidden sm:inline">Consumos</span>
                   <span className="sm:hidden">Consumos</span>
-                </Button>
-              </Link>
+                </Link>
+              </Button>
+
               <div className="flex-shrink-0 flex items-center gap-2 rounded-lg bg-primary px-3 md:px-4 py-2">
                 <BarChart3 className="h-4 md:h-5 w-4 md:w-5 text-primary-foreground" />
                 <span className="text-xs md:text-sm font-medium text-primary-foreground whitespace-nowrap">YTD 2025</span>

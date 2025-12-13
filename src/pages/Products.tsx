@@ -197,12 +197,12 @@ export default function Products() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Link to="/">
-                <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Voltar ao Dashboard
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">Gestão de Produtos</h1>
             <p className="text-muted-foreground mt-2">Controle de validade e estoque</p>
