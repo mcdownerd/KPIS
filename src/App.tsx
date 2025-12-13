@@ -15,7 +15,17 @@ import ShiftManagement from "./pages/ShiftManagement";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos - dados ficam "frescos" por 5 min
+      gcTime: 10 * 60 * 1000, // 10 minutos - cache persiste por 10 min
+      refetchOnWindowFocus: false, // NÃO recarregar ao voltar para a aba
+      refetchOnMount: false, // NÃO recarregar ao montar componente se já tem cache
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

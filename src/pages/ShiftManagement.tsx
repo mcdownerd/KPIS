@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,7 +109,6 @@ const ShiftManagement = () => {
     const [activeTab, setActiveTab] = useState('tabela');
     const [importedData, setImportedData] = useState({ vendas: false, perdas: false, tempos: false });
     const [isProcessing, setIsProcessing] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Configuration State
@@ -126,47 +126,52 @@ const ShiftManagement = () => {
         ]
     });
 
-    // Load data from Supabase on mount
-    useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
+    const queryClient = useQueryClient();
 
-            // Load shift data
+    // Load shift data with React Query (with automatic caching)
+    const { data: shiftDataFromQuery, isLoading } = useQuery({
+        queryKey: ['shiftData'],
+        queryFn: async () => {
             try {
-                const shiftData = await getShiftData();
-                setDados(shiftData);
+                return await getShiftData();
             } catch (error) {
                 console.error("Erro ao carregar shift data:", error);
-
-                // Fallback to localStorage for shift data
+                // Fallback to localStorage
                 const savedData = localStorage.getItem(STORAGE_KEY);
                 if (savedData) {
-                    try {
-                        setDados(JSON.parse(savedData));
-                    } catch (e) {
-                        console.error("Erro ao carregar backup local", e);
-                    }
+                    return JSON.parse(savedData);
                 }
+                return {};
             }
+        },
+        staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+        gcTime: 10 * 60 * 1000,
+    });
 
-            // Load config from localStorage only
-            const savedConfigLocal = localStorage.getItem(CONFIG_KEY);
-            if (savedConfigLocal) {
-                try {
-                    setConfig(JSON.parse(savedConfigLocal));
-                } catch (e) {
-                    console.error("Erro ao carregar config local", e);
-                }
+    // Initialize dados state from query data
+    useEffect(() => {
+        if (shiftDataFromQuery) {
+            setDados(shiftDataFromQuery);
+        }
+    }, [shiftDataFromQuery]);
+
+    // Load config from localStorage (only once)
+    useEffect(() => {
+        const savedConfigLocal = localStorage.getItem(CONFIG_KEY);
+        if (savedConfigLocal) {
+            try {
+                setConfig(JSON.parse(savedConfigLocal));
+            } catch (e) {
+                console.error("Erro ao carregar config local", e);
             }
-
-            setIsLoading(false);
-        };
-
-        loadData();
+        }
     }, []);
 
     const salvarDados = async (novosDados: Record<string, ShiftData>) => {
         setDados(novosDados);
+
+        // Update React Query cache immediately for instant UI update
+        queryClient.setQueryData(['shiftData'], novosDados);
 
         try {
             // Save to Supabase
