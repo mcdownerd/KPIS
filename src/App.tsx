@@ -18,10 +18,11 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos - dados ficam "frescos" por 5 min
-      gcTime: 10 * 60 * 1000, // 10 minutos - cache persiste por 10 min
+      staleTime: 30 * 60 * 1000, // 30 minutos - dados ficam "frescos" por 30 min
+      gcTime: 60 * 60 * 1000, // 1 hora - cache persiste por 1 hora MESMO após desmontar
       refetchOnWindowFocus: false, // NÃO recarregar ao voltar para a aba
       refetchOnMount: false, // NÃO recarregar ao montar componente se já tem cache
+      refetchOnReconnect: false, // NÃO recarregar ao reconectar internet
       retry: 1,
     },
   },
