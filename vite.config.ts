@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     commonjsOptions: {
-      include: [/xlsx/, /node_modules/],
+      include: [/xlsx/],
+      exclude: [/node_modules\/react/, /node_modules\/@radix-ui/],
     },
   },
 }));
