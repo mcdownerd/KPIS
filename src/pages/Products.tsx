@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Package, AlertTriangle, CheckCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -15,13 +15,23 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { logProductAction } from "@/lib/api/history";
 import { HistoryDialog } from "@/components/products/HistoryDialog";
 import { supabase } from "@/lib/supabase";
+import { useCachedData } from "@/hooks/useCachedData";
 
 export default function Products() {
   const { user, profile, isManager, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Cache de produtos usando o hook customizado
+  const {
+    data: allProducts,
+    isLoading: productsLoading,
+    updateCache: updateProductsCache
+  } = useCachedData<Product[]>({
+    cacheKey: 'products_list',
+    fetchFn: getProducts,
+    enabled: !authLoading && !!user && !!profile
+  });
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -34,55 +44,8 @@ export default function Products() {
   const isAdminOrSupervisor = profile?.role === 'admin' || profile?.role === 'supervisor';
   const isAdmin = profile?.role === 'admin';
 
-  const loadStores = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('stores')
-        .select('id, name')
-        .order('name', { ascending: true });
-
-      if (error) throw error;
-      setStores(data || []);
-    } catch (error) {
-      console.error("Erro ao carregar lojas:", error);
-    }
-  }, []);
-
-  const loadProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await getProducts();
-
-      const processedProducts = data.map(p => ({
-        ...p,
-        daysToExpiry: calculateDaysToExpiry(p.expiry_date),
-        status: calculateProductStatus(calculateDaysToExpiry(p.expiry_date))
-      }));
-
-      let filteredProducts = processedProducts;
-
-      if (isManager) {
-        if (profile?.store_id) {
-          filteredProducts = processedProducts.filter(p => p.store_id === profile.store_id);
-        }
-      } else if (isAdminOrSupervisor && selectedStore !== "all") {
-        filteredProducts = processedProducts.filter(p => p.store_id === selectedStore);
-      }
-
-      setProducts(filteredProducts);
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
-      toast.error("Erro ao carregar produtos. Tente novamente.");
-    } finally {
-      setLoading(false);
-    }
-  }, [isManager, profile?.store_id, isAdminOrSupervisor, selectedStore]);
-
-  // Carregar dados inicial e quando filtros mudarem
+  // Carregar lojas (apenas se admin/supervisor)
   useEffect(() => {
-    if (authLoading || !user || !profile) return;
-
-    // Inline loadStores
     if (isAdminOrSupervisor) {
       supabase
         .from('stores')
@@ -94,31 +57,34 @@ export default function Products() {
           }
         });
     }
+  }, [isAdminOrSupervisor]);
 
-    // Inline loadProducts
-    getProducts().then(data => {
-      const processedProducts = data.map(p => ({
-        ...p,
-        daysToExpiry: calculateDaysToExpiry(p.expiry_date),
-        status: calculateProductStatus(calculateDaysToExpiry(p.expiry_date))
-      }));
+  // Filtrar produtos localmente usando useMemo
+  const products = useMemo(() => {
+    if (!allProducts) return [];
 
-      let filteredProducts = processedProducts;
+    const processedProducts = allProducts.map(p => ({
+      ...p,
+      daysToExpiry: calculateDaysToExpiry(p.expiry_date),
+      status: calculateProductStatus(calculateDaysToExpiry(p.expiry_date))
+    }));
 
-      if (isManager && profile?.store_id) {
-        filteredProducts = processedProducts.filter(p => p.store_id === profile.store_id);
-      } else if (isAdminOrSupervisor && selectedStore !== "all") {
-        filteredProducts = processedProducts.filter(p => p.store_id === selectedStore);
-      }
+    if (isManager && profile?.store_id) {
+      return processedProducts.filter(p => p.store_id === profile.store_id);
+    } else if (isAdminOrSupervisor && selectedStore !== "all") {
+      return processedProducts.filter(p => p.store_id === selectedStore);
+    }
 
-      setProducts(filteredProducts);
-      setLoading(false);
-    }).catch(error => {
-      console.error("Erro ao carregar produtos:", error);
-      toast.error("Erro ao carregar produtos.");
-      setLoading(false);
-    });
-  }, [authLoading, user, profile, selectedStore, isAdminOrSupervisor, isManager]);
+    return processedProducts;
+  }, [allProducts, isManager, profile, isAdminOrSupervisor, selectedStore]);
+
+  const loading = productsLoading || authLoading;
+
+  // Função para recarregar produtos (atualizar cache)
+  const loadProducts = async () => {
+    const data = await getProducts();
+    updateProductsCache(data);
+  };
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -180,7 +146,12 @@ export default function Products() {
       // Log action BEFORE deleting to avoid foreign key constraint error
       await logProductAction(id, 'EXCLUSAO', { deleted_at: new Date().toISOString() });
       await deleteProduct(id);
-      setProducts(products.filter(p => p.id !== id));
+
+      // Update cache manually to remove item
+      if (allProducts) {
+        updateProductsCache(allProducts.filter(p => p.id !== id));
+      }
+
       toast.success("Produto removido com sucesso!");
     } catch (error: unknown) {
       console.error("Erro ao deletar produto:", error);

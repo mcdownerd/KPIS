@@ -23,18 +23,75 @@ const months = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 
+import { useCachedData } from "@/hooks/useCachedData";
+
+// ... (imports remain the same)
+
 export default function Utilities() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [waterPricePerM3, setWaterPricePerM3] = useState(0.70);
-  const [loading, setLoading] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonData, setComparisonData] = useState<Record<string, MonthlyData>>({});
   const [loadingComparison, setLoadingComparison] = useState(false);
 
-  // Estado local para a UI
+  // Função de fetch para o useCachedData
+  const fetchMonthData = async () => {
+    const utilities = await getUtilitiesByMonth(selectedMonth, 2025);
+
+    // Fetch managers
+    const startDate = `2025-${(selectedMonth + 1).toString().padStart(2, '0')}-01`;
+    const endDate = `2025-${(selectedMonth + 1).toString().padStart(2, '0')}-31`; // Simple approximation
+    const managersMetrics = await getHRMetricsByType('managers', startDate, endDate);
+    const managersData = managersMetrics[0]?.additional_data || {};
+
+    // Transformar dados do Supabase para o formato da UI
+    return {
+      month: selectedMonth,
+      year: 2025,
+      managerMorning: managersData.manager_morning || "",
+      managerNight: managersData.manager_night || "",
+      electricityReadings: Array.from({ length: 31 }, (_, i) => {
+        const day = i + 1;
+        const dateStr = `2025-${(selectedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+        const vazia = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_vazia')?.reading_value || null;
+        const ponta = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_ponta')?.reading_value || null;
+        const cheia = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_cheia')?.reading_value || null;
+        const sVazia = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_svazia')?.reading_value || null;
+
+        return { day, vazia, ponta, cheia, sVazia };
+      }),
+      waterReadings: Array.from({ length: 31 }, (_, i) => {
+        const day = i + 1;
+        const dateStr = `2025-${(selectedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        const reading = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'water')?.reading_value || null;
+
+        return {
+          day,
+          reading,
+          m3Used: 0, // Será recalculado pelo calculateDailyCosts
+          euroSpent: 0
+        };
+      }),
+      waterPricePerM3: waterPricePerM3,
+    };
+  };
+
+  // Cache de dados usando o hook customizado
+  const {
+    data: cachedMonthData,
+    isLoading: loading,
+    updateCache: updateMonthCache
+  } = useCachedData<MonthlyData>({
+    cacheKey: `utilities_data_${selectedMonth}_2025`,
+    fetchFn: fetchMonthData,
+    enabled: !!user && !authLoading
+  });
+
+  // Estado local para a UI (inicializado com dados do cache ou padrão)
   const [currentMonthData, setCurrentMonthData] = useState<MonthlyData>({
     month: selectedMonth,
     year: 2025,
@@ -56,6 +113,13 @@ export default function Utilities() {
     waterPricePerM3: 0.70,
   });
 
+  // Atualizar estado local quando cache muda
+  useEffect(() => {
+    if (cachedMonthData) {
+      setCurrentMonthData(cachedMonthData);
+    }
+  }, [cachedMonthData]);
+
   // Redirecionar se não estiver logado
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,71 +127,12 @@ export default function Utilities() {
     }
   }, [user, authLoading, navigate]);
 
-  // Carregar dados quando o mês muda
-  useEffect(() => {
-    if (user) {
-      loadMonthData(selectedMonth);
-    }
-  }, [selectedMonth, user]);
-
   // Carregar dados de comparação quando o modal abre
   useEffect(() => {
     if (showComparison && user) {
       loadComparisonData();
     }
   }, [showComparison, user]);
-
-  const loadMonthData = async (month: number) => {
-    setLoading(true);
-    try {
-      const utilities = await getUtilitiesByMonth(month, 2025);
-
-      // Fetch managers
-      const startDate = `2025-${(month + 1).toString().padStart(2, '0')}-01`;
-      const endDate = `2025-${(month + 1).toString().padStart(2, '0')}-31`; // Simple approximation
-      const managersMetrics = await getHRMetricsByType('managers', startDate, endDate);
-      const managersData = managersMetrics[0]?.additional_data || {};
-
-      // Transformar dados do Supabase para o formato da UI
-      const newMonthData: MonthlyData = {
-        month: month,
-        year: 2025,
-        managerMorning: managersData.manager_morning || "",
-        managerNight: managersData.manager_night || "",
-        electricityReadings: Array.from({ length: 31 }, (_, i) => {
-          const day = i + 1;
-          const dateStr = `2025-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-
-          const vazia = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_vazia')?.reading_value || null;
-          const ponta = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_ponta')?.reading_value || null;
-          const cheia = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_cheia')?.reading_value || null;
-          const sVazia = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'electricity_svazia')?.reading_value || null;
-
-          return { day, vazia, ponta, cheia, sVazia };
-        }),
-        waterReadings: Array.from({ length: 31 }, (_, i) => {
-          const day = i + 1;
-          const dateStr = `2025-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-          const reading = utilities.find(u => u.reading_date === dateStr && u.utility_type === 'water')?.reading_value || null;
-
-          return {
-            day,
-            reading,
-            m3Used: 0, // Será recalculado pelo calculateDailyCosts
-            euroSpent: 0
-          };
-        }),
-        waterPricePerM3: waterPricePerM3,
-      };
-
-      setCurrentMonthData(newMonthData);
-    } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      toast.error("Erro ao carregar dados de consumo.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleManagerChange = async (field: 'managerMorning' | 'managerNight', value: string) => {
     setCurrentMonthData(prev => ({ ...prev, [field]: value }));
