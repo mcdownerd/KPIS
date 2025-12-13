@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Trash2, Download, Upload, ChevronLeft, ChevronRight, FileUp, Loader2, Home, ArrowLeft } from 'lucide-react';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import { getShiftData, saveAllShiftData, saveAppConfig, getAppConfig } from '@/lib/api/shifts';
 import type { ShiftData as APIShiftData, AppConfig as APIAppConfig } from '@/lib/api/shifts';
 
