@@ -133,6 +133,7 @@ export function LoginPage() {
                                             required
                                             disabled={loading}
                                             className="pl-10 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                            autoComplete="email"
                                         />
                                     </div>
                                 </div>
@@ -154,6 +155,7 @@ export function LoginPage() {
                                             required
                                             disabled={loading}
                                             className="pl-10 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                            autoComplete="current-password"
                                         />
                                     </div>
                                 </div>
@@ -189,6 +191,7 @@ export function LoginPage() {
                                             required
                                             disabled={loading}
                                             className="pl-10 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                            autoComplete="name"
                                         />
                                     </div>
                                 </div>
@@ -205,6 +208,7 @@ export function LoginPage() {
                                             required
                                             disabled={loading}
                                             className="pl-10 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                            autoComplete="email"
                                         />
                                     </div>
                                 </div>
@@ -222,6 +226,7 @@ export function LoginPage() {
                                             disabled={loading}
                                             minLength={6}
                                             className="pl-10 bg-slate-900/50 border-white/10 text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-primary/20 transition-all"
+                                            autoComplete="new-password"
                                         />
                                     </div>
                                     <p className="text-xs text-slate-500">
