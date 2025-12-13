@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react'
 import { getCurrentUser, getCurrentUserProfile, onAuthStateChange, mapSupabaseUserToProfile } from '@/lib/api/auth'
 import type { User } from '@supabase/supabase-js'
 
@@ -32,71 +32,98 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profile, setProfile] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
 
+    // Refs to track state inside the event listener without dependencies
+    const mountedRef = useRef(true)
+    const lastUserIdRef = useRef<string | null>(null)
+    const profileLoadedRef = useRef(false)
+
+    useEffect(() => {
+        mountedRef.current = true
+        return () => { mountedRef.current = false }
+    }, [])
+
     useEffect(() => {
         console.log('[AuthProvider] Initializing...')
-        let cancelled = false;
 
-        // Check current session immediately
+        // Initial check
         getCurrentUser().then(async (currentUser) => {
-            if (cancelled) return;
+            if (!mountedRef.current) return;
 
             if (currentUser) {
                 setUser(currentUser)
+                lastUserIdRef.current = currentUser.id
                 try {
                     const userProfile = await getCurrentUserProfile()
-                    if (!cancelled) setProfile(userProfile)
+                    if (mountedRef.current) {
+                        setProfile(userProfile)
+                        profileLoadedRef.current = true
+                    }
                 } catch (error) {
                     console.error('[AuthProvider] Error loading initial profile:', error)
                 }
             }
-            if (!cancelled) setLoading(false)
+            if (mountedRef.current) setLoading(false)
         })
 
         const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-            console.log('[AuthProvider] Event:', event, 'Session:', !!session)
-            if (cancelled) return;
+            if (!mountedRef.current) return;
 
-            if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
+            // console.log('[AuthProvider] Event:', event) // Reduced logging
+
+            if (session?.user) {
+                const userId = session.user.id
+                const isSameUser = userId === lastUserIdRef.current
+
                 setUser(session.user)
+                lastUserIdRef.current = userId
 
-                // Only fetch profile if we don't have it or if it's a fresh sign in
-                if (!profile || event === 'SIGNED_IN') {
-                    // Don't set loading true for token refresh to avoid UI flicker
+                // Only fetch profile if:
+                // 1. User changed
+                // 2. Profile not loaded yet
+                // 3. Explicit SIGNED_IN event (might be a re-login)
+                // We ignore INITIAL_SESSION if we already have the profile/same user to avoid double fetch with the initial check
+                const shouldFetchProfile = !isSameUser || !profileLoadedRef.current || event === 'SIGNED_IN';
+
+                if (shouldFetchProfile) {
                     if (event !== 'TOKEN_REFRESHED') setLoading(true)
 
                     try {
+                        // Race condition protection
                         const profilePromise = getCurrentUserProfile()
                         const timeoutPromise = new Promise<null>((resolve) =>
-                            setTimeout(() => resolve(null), 2000)
+                            setTimeout(() => resolve(null), 3000)
                         )
 
                         const userProfile = await Promise.race([profilePromise, timeoutPromise])
 
-                        if (cancelled) return;
+                        if (!mountedRef.current) return;
 
                         if (!userProfile && session.user) {
+                            // Fallback
                             setProfile(mapSupabaseUserToProfile(session.user))
                         } else {
                             setProfile(userProfile)
                         }
+                        profileLoadedRef.current = true
                     } catch (error) {
                         console.error('[AuthProvider] Error loading profile:', error)
                         if (session.user) {
                             setProfile(mapSupabaseUserToProfile(session.user))
                         }
                     } finally {
-                        if (!cancelled) setLoading(false)
+                        if (mountedRef.current) setLoading(false)
                     }
                 }
             } else if (event === 'SIGNED_OUT') {
                 setUser(null)
                 setProfile(null)
+                lastUserIdRef.current = null
+                profileLoadedRef.current = false
                 setLoading(false)
             }
         })
 
         return () => {
-            cancelled = true;
             subscription.unsubscribe()
         }
     }, [])
@@ -114,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentUser) {
             const userProfile = await getCurrentUserProfile()
             setProfile(userProfile)
+            profileLoadedRef.current = true
         }
     }
 
