@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -939,10 +940,12 @@ const ShiftManagement = () => {
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => window.location.href = '/'}
+                            asChild
                             className="shrink-0"
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <Link to="/">
+                                <ArrowLeft className="h-4 w-4" />
+                            </Link>
                         </Button>
                         <h1 className="text-2xl font-bold">Informações de Turno - Amadora 2025</h1>
                     </div>
