@@ -33,7 +33,7 @@ export default function Utilities() {
   const navigate = useNavigate();
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [waterPricePerM3, setWaterPricePerM3] = useState(0.70);
+  const [waterPricePerM3, setWaterPricePerM3] = useState(3.02);
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonData, setComparisonData] = useState<Record<string, MonthlyData>>({});
   const [loadingComparison, setLoadingComparison] = useState(false);
@@ -111,7 +111,7 @@ export default function Utilities() {
       m3Used: 0,
       euroSpent: 0,
     })),
-    waterPricePerM3: 0.70,
+    waterPricePerM3: 3.02,
   });
 
   // Atualizar estado local quando cache muda
