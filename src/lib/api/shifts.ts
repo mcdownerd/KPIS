@@ -42,6 +42,7 @@ export interface ExcelMapping {
 export interface AppConfig {
     gerentes: ManagerConfig[];
     mappings: ExcelMapping[];
+    waterPrice?: number;
 }
 
 /**
@@ -73,11 +74,11 @@ export async function getShiftData(year: number = new Date().getFullYear(), stor
 
     data?.forEach(row => {
         let { date_key, ...shiftData } = row;
-        
+
         // Filter logic:
         // If Amadora (default), take keys WITHOUT prefix (legacy) OR with 'Amadora:' prefix
         // If Other, take keys WITH specific prefix
-        
+
         let isValid = false;
         let cleanKey = date_key;
 

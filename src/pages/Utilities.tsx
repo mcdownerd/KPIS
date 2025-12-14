@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { getUtilitiesByMonth, getUtilitiesForComparison, upsertUtilityReading, Utility } from "@/lib/api/utilities";
 import { upsertHRMetric, getHRMetricsByType } from "@/lib/api/hr";
+import { getAppConfig, saveAppConfig } from "@/lib/api/shifts";
 
 const months = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -133,6 +134,38 @@ export default function Utilities() {
       loadComparisonData();
     }
   }, [showComparison, user]);
+
+  // Carregar configuração (Preço da Água)
+  useEffect(() => {
+    const loadConfig = async () => {
+      if (!user) return;
+      try {
+        const config = await getAppConfig();
+        if (config?.waterPrice) {
+          setWaterPricePerM3(config.waterPrice);
+          // Update currentMonthData as well to reflect immediately
+          setCurrentMonthData(prev => ({ ...prev, waterPricePerM3: config.waterPrice! }));
+        }
+      } catch (error) {
+        console.error("Erro ao carregar configuração:", error);
+      }
+    };
+    loadConfig();
+  }, [user]);
+
+  const handleWaterPriceSave = async () => {
+    try {
+      const currentConfig = await getAppConfig() || { gerentes: [], mappings: [] };
+      await saveAppConfig({
+        ...currentConfig,
+        waterPrice: waterPricePerM3
+      });
+      toast.success("Preço da água salvo!");
+    } catch (error) {
+      console.error("Erro ao salvar preço:", error);
+      toast.error("Erro ao salvar preço da água.");
+    }
+  };
 
   const handleManagerChange = async (field: 'managerMorning' | 'managerNight', value: string) => {
     setCurrentMonthData(prev => ({ ...prev, [field]: value }));
@@ -471,7 +504,12 @@ export default function Utilities() {
                       type="number"
                       step="0.01"
                       value={waterPricePerM3}
-                      onChange={(e) => setWaterPricePerM3(parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setWaterPricePerM3(val);
+                        setCurrentMonthData(prev => ({ ...prev, waterPricePerM3: val }));
+                      }}
+                      onBlur={handleWaterPriceSave}
                       className="w-24"
                     />
                   </div>
