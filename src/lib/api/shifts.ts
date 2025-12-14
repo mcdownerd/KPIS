@@ -47,7 +47,10 @@ export interface AppConfig {
 /**
  * Get all shift data for the current year
  */
-export async function getShiftData(year: number = new Date().getFullYear()): Promise<Record<string, ShiftData>> {
+/**
+ * Get all shift data for the current year and store
+ */
+export async function getShiftData(year: number = new Date().getFullYear(), storeName: string = 'Amadora'): Promise<Record<string, ShiftData>> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -66,9 +69,35 @@ export async function getShiftData(year: number = new Date().getFullYear()): Pro
 
     // Transform array to Record<string, ShiftData>
     const result: Record<string, ShiftData> = {};
+    const prefix = storeName === 'Amadora' ? '' : `${storeName}:`;
+
     data?.forEach(row => {
-        const { date_key, ...shiftData } = row;
-        result[date_key] = shiftData as ShiftData;
+        let { date_key, ...shiftData } = row;
+        
+        // Filter logic:
+        // If Amadora (default), take keys WITHOUT prefix (legacy) OR with 'Amadora:' prefix
+        // If Other, take keys WITH specific prefix
+        
+        let isValid = false;
+        let cleanKey = date_key;
+
+        if (storeName === 'Amadora') {
+            if (!date_key.includes(':')) {
+                isValid = true; // Legacy data
+            } else if (date_key.startsWith('Amadora:')) {
+                isValid = true;
+                cleanKey = date_key.replace('Amadora:', '');
+            }
+        } else {
+            if (date_key.startsWith(prefix)) {
+                isValid = true;
+                cleanKey = date_key.replace(prefix, '');
+            }
+        }
+
+        if (isValid) {
+            result[cleanKey] = shiftData as ShiftData;
+        }
     });
 
     return result;
@@ -77,18 +106,22 @@ export async function getShiftData(year: number = new Date().getFullYear()): Pro
 /**
  * Save shift data for a specific date
  */
-export async function saveShiftData(dateKey: string, data: ShiftData, year: number = new Date().getFullYear()): Promise<void> {
+export async function saveShiftData(dateKey: string, data: ShiftData, year: number = new Date().getFullYear(), storeName: string = 'Amadora'): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
         throw new Error('User not authenticated');
     }
 
+    // Add prefix if not Amadora (or explicitly Amadora if we wanted to migrate, but let's keep legacy clean for now)
+    // Actually, let's keep 'Amadora' clean (no prefix) to preserve backward compatibility perfectly.
+    const finalKey = storeName === 'Amadora' ? dateKey : `${storeName}:${dateKey}`;
+
     const { error } = await supabase
         .from('shift_data')
         .upsert({
             user_id: user.id,
-            date_key: dateKey,
+            date_key: finalKey,
             year,
             ...data
         }, {
@@ -104,19 +137,22 @@ export async function saveShiftData(dateKey: string, data: ShiftData, year: numb
 /**
  * Save all shift data (bulk operation)
  */
-export async function saveAllShiftData(allData: Record<string, ShiftData>, year: number = new Date().getFullYear()): Promise<void> {
+export async function saveAllShiftData(allData: Record<string, ShiftData>, year: number = new Date().getFullYear(), storeName: string = 'Amadora'): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
         throw new Error('User not authenticated');
     }
 
-    const records = Object.entries(allData).map(([dateKey, shiftData]) => ({
-        user_id: user.id,
-        date_key: dateKey,
-        year,
-        ...shiftData
-    }));
+    const records = Object.entries(allData).map(([dateKey, shiftData]) => {
+        const finalKey = storeName === 'Amadora' ? dateKey : `${storeName}:${dateKey}`;
+        return {
+            user_id: user.id,
+            date_key: finalKey,
+            year,
+            ...shiftData
+        };
+    });
 
     const { error } = await supabase
         .from('shift_data')

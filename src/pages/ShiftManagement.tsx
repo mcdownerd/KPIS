@@ -102,6 +102,8 @@ const formatarNumero = (valor: number | undefined, decimais = 0) => {
     return new Intl.NumberFormat('pt-PT', { minimumFractionDigits: decimais, maximumFractionDigits: decimais }).format(valor);
 };
 
+const STORES = ['Amadora', 'Queluz'];
+
 const ShiftManagement = () => {
     const { toast } = useToast();
     const [mesAtual, setMesAtual] = useState(0);
@@ -110,6 +112,7 @@ const ShiftManagement = () => {
     const [activeTab, setActiveTab] = useState('tabela');
     const [importedData, setImportedData] = useState({ vendas: false, perdas: false, tempos: false });
     const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedStore, setSelectedStore] = useState('Amadora');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Configuration State
@@ -131,16 +134,21 @@ const ShiftManagement = () => {
 
     // Load shift data with React Query (with automatic caching)
     const { data: shiftDataFromQuery, isLoading } = useQuery({
-        queryKey: ['shiftData'],
+        queryKey: ['shiftData', selectedStore],
         queryFn: async () => {
             try {
-                return await getShiftData();
+                return await getShiftData(new Date().getFullYear(), selectedStore);
             } catch (error) {
                 console.error("Erro ao carregar shift data:", error);
-                // Fallback to localStorage
-                const savedData = localStorage.getItem(STORAGE_KEY);
+                // Fallback to localStorage with store-specific key
+                const savedData = localStorage.getItem(`${STORAGE_KEY}_${selectedStore}`);
                 if (savedData) {
                     return JSON.parse(savedData);
+                }
+                // Try legacy key for Amadora if new key doesn't exist
+                if (selectedStore === 'Amadora') {
+                    const legacyData = localStorage.getItem(STORAGE_KEY);
+                    if (legacyData) return JSON.parse(legacyData);
                 }
                 return {};
             }
@@ -153,6 +161,8 @@ const ShiftManagement = () => {
     useEffect(() => {
         if (shiftDataFromQuery) {
             setDados(shiftDataFromQuery);
+        } else {
+            setDados({}); // Reset if no data
         }
     }, [shiftDataFromQuery]);
 
@@ -172,14 +182,14 @@ const ShiftManagement = () => {
         setDados(novosDados);
 
         // Update React Query cache immediately for instant UI update
-        queryClient.setQueryData(['shiftData'], novosDados);
+        queryClient.setQueryData(['shiftData', selectedStore], novosDados);
 
         try {
             // Save to Supabase
-            await saveAllShiftData(novosDados);
+            await saveAllShiftData(novosDados, new Date().getFullYear(), selectedStore);
 
             // Also save to localStorage as backup
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(novosDados));
+            localStorage.setItem(`${STORAGE_KEY}_${selectedStore}`, JSON.stringify(novosDados));
         } catch (error) {
             console.error("Erro ao salvar no Supabase:", error);
             toast({
@@ -189,7 +199,7 @@ const ShiftManagement = () => {
             });
 
             // Still save to localStorage
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(novosDados));
+            localStorage.setItem(`${STORAGE_KEY}_${selectedStore}`, JSON.stringify(novosDados));
         }
     };
 
@@ -947,7 +957,19 @@ const ShiftManagement = () => {
                                 <ArrowLeft className="h-4 w-4" />
                             </Link>
                         </Button>
-                        <h1 className="text-2xl font-bold">Informações de Turno - Amadora 2025</h1>
+                        <div className="flex items-center gap-4">
+                            <h1 className="text-2xl font-bold">Informações de Turno - {selectedStore} 2025</h1>
+                            <Select value={selectedStore} onValueChange={setSelectedStore}>
+                                <SelectTrigger className="w-[180px] bg-background">
+                                    <SelectValue placeholder="Selecione a Loja" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {STORES.map(store => (
+                                        <SelectItem key={store} value={store}>{store}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="flex gap-2">
                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 text-yellow-700 dark:text-yellow-500 px-4 py-2 rounded-lg font-semibold text-sm">
