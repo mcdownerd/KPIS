@@ -1029,25 +1029,25 @@ const ShiftManagement = () => {
                 </div>
             ) : (
                 <>
-                    <div className="bg-gradient-to-br from-purple-600 to-purple-500 p-6 rounded-xl shadow-lg text-white">
+                    <div className="bg-[#FFC72C] p-6 rounded-xl shadow-lg text-black">
                         <h3 className="text-xl font-semibold text-center mb-6">
                             Resumo do Dia {diaAtual} de {CONSTANTES.MESES[mesAtual]}
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl text-center border border-white/20">
-                                <div className="text-xs uppercase font-bold text-white/80 mb-2">Vendas Total</div>
+                            <div className="bg-black/5 backdrop-blur-sm p-4 rounded-xl text-center border border-black/10">
+                                <div className="text-xs uppercase font-bold text-black/70 mb-2">Vendas Total</div>
                                 <div className="text-2xl font-bold font-mono">{formatarMoeda(calculos.vendasTotal)}</div>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl text-center border border-white/20">
-                                <div className="text-xs uppercase font-bold text-white/80 mb-2">GC's Total</div>
+                            <div className="bg-black/5 backdrop-blur-sm p-4 rounded-xl text-center border border-black/10">
+                                <div className="text-xs uppercase font-bold text-black/70 mb-2">GC's Total</div>
                                 <div className="text-2xl font-bold font-mono">{formatarNumero(calculos.gcsTotal)}</div>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl text-center border border-white/20">
-                                <div className="text-xs uppercase font-bold text-white/80 mb-2">BM Médio</div>
+                            <div className="bg-black/5 backdrop-blur-sm p-4 rounded-xl text-center border border-black/10">
+                                <div className="text-xs uppercase font-bold text-black/70 mb-2">BM Médio</div>
                                 <div className="text-2xl font-bold font-mono">{formatarMoeda(calculos.bmMedio)}</div>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl text-center border border-white/20">
-                                <div className="text-xs uppercase font-bold text-white/80 mb-2">MO Dia</div>
+                            <div className="bg-black/5 backdrop-blur-sm p-4 rounded-xl text-center border border-black/10">
+                                <div className="text-xs uppercase font-bold text-black/70 mb-2">MO Dia</div>
                                 <div className="text-2xl font-bold font-mono">{formatarPercentagem(calculos.moDia)}</div>
                             </div>
                         </div>
