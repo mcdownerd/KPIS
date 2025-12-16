@@ -166,7 +166,7 @@ export const OperatorAnalysis = ({ deliveryData }: OperatorAnalysisProps) => {
                 <TableCell className="text-right">€ {selectedStats.avg_mb.toFixed(2)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>MBP</TableCell>
+                <TableCell>Delivery</TableCell>
                 <TableCell className="text-right">€ {selectedStats.avg_mbp.toFixed(2)}</TableCell>
               </TableRow>
               <TableRow>
@@ -221,7 +221,7 @@ export const OperatorAnalysis = ({ deliveryData }: OperatorAnalysisProps) => {
                   <TableCell className="text-right">€ {restaurantAverage.mb.toFixed(2)}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>MBP</TableCell>
+                  <TableCell>Delivery</TableCell>
                   <TableCell className="text-right">€ {restaurantAverage.mbp.toFixed(2)}</TableCell>
                 </TableRow>
                 <TableRow>
@@ -264,7 +264,7 @@ export const OperatorAnalysis = ({ deliveryData }: OperatorAnalysisProps) => {
                     { label: "Vendas", key: "sales" as const },
                     { label: "Dinheiro", key: "cash" as const },
                     { label: "MB", key: "mb" as const },
-                    { label: "MBP", key: "mbp" as const },
+                    { label: "Delivery", key: "mbp" as const },
                     { label: "TR/Euro", key: "tr_euro" as const },
                     { label: "Diferença", key: "difference" as const },
                   ].map(({ label, key }) => {

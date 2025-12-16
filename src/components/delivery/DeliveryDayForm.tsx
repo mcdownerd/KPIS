@@ -304,7 +304,7 @@ export const DeliveryDayForm = ({ day, initialData, onSave }: DeliveryDayFormPro
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">MBP</Label>
+                    <Label className="text-xs text-muted-foreground">Uber/Bolt</Label>
                     <Input
                       type="text"
                       value={activeInput?.id === shift.id && activeInput?.field === "mbp" ? activeInput.value : (shift.mbp === 0 ? "" : `€ ${shift.mbp}`)}

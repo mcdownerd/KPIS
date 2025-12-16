@@ -23,7 +23,7 @@ export const RestaurantAverage = ({ deliveryData }: RestaurantAverageProps) => {
     deliveryData.forEach(day => {
       [...day.morning_shifts, ...day.night_shifts].forEach(shift => {
         if (!shift.operator) return;
-        
+
         totalGcs += shift.gcs;
         totalSales += shift.sales;
         totalCash += shift.cash;
@@ -113,7 +113,7 @@ export const RestaurantAverage = ({ deliveryData }: RestaurantAverageProps) => {
               <TableCell className="text-right">€ {restaurantStats.avgMb.toFixed(2)}</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-medium">MB Portátil (MBP)</TableCell>
+              <TableCell className="font-medium">Delivery</TableCell>
               <TableCell className="text-right">€ {restaurantStats.avgMbp.toFixed(2)}</TableCell>
             </TableRow>
             <TableRow>
