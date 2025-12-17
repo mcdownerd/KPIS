@@ -140,16 +140,7 @@ const ShiftManagement = () => {
                 return await getShiftData(new Date().getFullYear(), selectedStore);
             } catch (error) {
                 console.error("Erro ao carregar shift data:", error);
-                // Fallback to localStorage with store-specific key
-                const savedData = localStorage.getItem(`${STORAGE_KEY}_${selectedStore}`);
-                if (savedData) {
-                    return JSON.parse(savedData);
-                }
-                // Try legacy key for Amadora if new key doesn't exist
-                if (selectedStore === 'Amadora') {
-                    const legacyData = localStorage.getItem(STORAGE_KEY);
-                    if (legacyData) return JSON.parse(legacyData);
-                }
+                // No local storage fallback - return empty object
                 return {};
             }
         },
@@ -166,16 +157,19 @@ const ShiftManagement = () => {
         }
     }, [shiftDataFromQuery]);
 
-    // Load config from localStorage (only once)
+    // Load config from Supabase (no local storage)
     useEffect(() => {
-        const savedConfigLocal = localStorage.getItem(CONFIG_KEY);
-        if (savedConfigLocal) {
+        const loadConfig = async () => {
             try {
-                setConfig(JSON.parse(savedConfigLocal));
+                const savedConfig = await getAppConfig();
+                if (savedConfig) {
+                    setConfig(savedConfig);
+                }
             } catch (e) {
-                console.error("Erro ao carregar config local", e);
+                console.error("Erro ao carregar config", e);
             }
-        }
+        };
+        loadConfig();
     }, []);
 
     const salvarDados = async (novosDados: Record<string, ShiftData>) => {
@@ -185,21 +179,15 @@ const ShiftManagement = () => {
         queryClient.setQueryData(['shiftData', selectedStore], novosDados);
 
         try {
-            // Save to Supabase
+            // Save to Supabase only (no local storage)
             await saveAllShiftData(novosDados, new Date().getFullYear(), selectedStore);
-
-            // Also save to localStorage as backup
-            localStorage.setItem(`${STORAGE_KEY}_${selectedStore}`, JSON.stringify(novosDados));
         } catch (error) {
             console.error("Erro ao salvar no Supabase:", error);
             toast({
                 variant: "destructive",
                 title: "Erro ao salvar",
-                description: "Dados salvos localmente, mas não sincronizados com a nuvem."
+                description: "Não foi possível salvar os dados na nuvem."
             });
-
-            // Still save to localStorage
-            localStorage.setItem(`${STORAGE_KEY}_${selectedStore}`, JSON.stringify(novosDados));
         }
     };
 
@@ -207,23 +195,16 @@ const ShiftManagement = () => {
         setConfig(newConfig);
 
         try {
-            // Save to Supabase
+            // Save to Supabase only (no local storage)
             await saveAppConfig(newConfig);
-
-            // Also save to localStorage as backup
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
-
             toast({ title: "Configurações salvas!" });
         } catch (error) {
             console.error("Erro ao salvar config no Supabase:", error);
             toast({
                 variant: "destructive",
                 title: "Erro ao salvar configurações",
-                description: "Configurações salvas localmente, mas não sincronizadas."
+                description: "Não foi possível salvar as configurações na nuvem."
             });
-
-            // Still save to localStorage
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
         }
     };
 
@@ -943,7 +924,7 @@ const ShiftManagement = () => {
     };
 
     return (
-        <div className="container mx-auto p-4 space-y-6">
+        <div className="min-h-screen bg-background container mx-auto p-4 space-y-6">
             <div className="bg-card text-card-foreground p-6 rounded-xl shadow-sm border">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                     <div className="flex items-center gap-3">
@@ -1297,9 +1278,12 @@ const ShiftManagement = () => {
                         <TabsContent value="anual">
                             <div className="bg-[#2D3748] p-6 rounded-xl">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {CONSTANTES.GERENTES.map(gerente => {
+                                    {config.gerentes.map(gerenteObj => {
+                                        const gerente = gerenteObj.name;
                                         const s = analiseGerentes[gerente];
-                                        const cor = CONSTANTES.CORES_GERENTES[gerente as keyof typeof CONSTANTES.CORES_GERENTES];
+                                        const cor = gerenteObj.color;
+
+                                        if (!s) return null;
 
                                         return (
                                             <div key={gerente} className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-lg">
