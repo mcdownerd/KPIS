@@ -200,17 +200,15 @@ export async function getAppConfig(): Promise<AppConfig | null> {
         throw new Error('User not authenticated');
     }
 
+    // Use maybeSingle with limit to handle potential duplicates (if unique constraint is missing)
     const { data, error } = await supabase
         .from('app_config')
         .select('config_data')
         .eq('user_id', user.id)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
     if (error) {
-        if (error.code === 'PGRST116') {
-            // No config found, return null
-            return null;
-        }
         console.error('Error fetching app config:', error);
         throw error;
     }
@@ -232,14 +230,35 @@ export async function saveAppConfig(config: AppConfig): Promise<void> {
         throw new Error('User not authenticated');
     }
 
-    const { error } = await supabase
+    // Check if config exists first to avoid duplicate inserts if unique constraint is missing
+    const { data: existing } = await supabase
         .from('app_config')
-        .upsert({
-            user_id: user.id,
-            config_data: JSON.stringify(config)
-        }, {
-            onConflict: 'user_id'
-        });
+        .select('user_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+    let error;
+
+    if (existing) {
+        // Update existing
+        const result = await supabase
+            .from('app_config')
+            .update({
+                config_data: JSON.stringify(config)
+            })
+            .eq('user_id', user.id);
+        error = result.error;
+    } else {
+        // Insert new
+        const result = await supabase
+            .from('app_config')
+            .insert({
+                user_id: user.id,
+                config_data: JSON.stringify(config)
+            });
+        error = result.error;
+    }
 
     if (error) {
         console.error('Error saving app config:', error);
