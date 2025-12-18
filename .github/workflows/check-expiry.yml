@@ -1,0 +1,41 @@
+name: Check Product Expiry
+
+on:
+  schedule:
+    # Runs every day at 7:30 AM UTC (8:30 AM in Portugal during winter, 9:30 AM during summer)
+    # To run at 7:30 AM Portugal time year-round, use 6:30 UTC (winter) or 7:30 UTC (summer)
+    # This is set to 6:30 UTC to match 7:30 AM WET (Western European Time)
+    - cron: '30 6 * * *'
+  
+  # Allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  check-expiry:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run expiry check
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_SERVICE_KEY: ${{ secrets.VITE_SUPABASE_SERVICE_KEY }}
+          VITE_RESEND_API_KEY: ${{ secrets.VITE_RESEND_API_KEY }}
+        run: npx ts-node scripts/check-expiry.ts
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Expiry check failed! Check the logs above."
+          exit 1
