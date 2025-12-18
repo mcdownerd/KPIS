@@ -1,1 +1,56 @@
-{"name":"","short_name":"","icons":[{"src":"/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#ffffff","background_color":"#ffffff","display":"standalone"}
+{
+    "name": "Dashboard KPI's 2025 - P.Borges",
+    "short_name": "KPI's P.Borges",
+    "description": "Dashboard de KPIs para acompanhamento de performance de vendas, operações e métricas PACE",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#9333ea",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "business",
+        "productivity",
+        "finance"
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "Gestão de Turnos",
+            "short_name": "Turnos",
+            "description": "Acesso rápido à gestão de turnos",
+            "url": "/shift-management",
+            "icons": [
+                {
+                    "src": "/android-chrome-192x192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Produtos",
+            "short_name": "Produtos",
+            "description": "Gestão de produtos e validade",
+            "url": "/products",
+            "icons": [
+                {
+                    "src": "/android-chrome-192x192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}

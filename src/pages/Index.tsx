@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ModeToggle } from "@/components/mode-toggle";
 
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
+import { InstallPWA } from "@/components/InstallPWA";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -379,6 +380,7 @@ const Index = () => {
           <p>Dashboard KPI's 2025 - P.Borges | Atualizado em tempo real</p>
         </div>
       </footer>
+      <InstallPWA />
     </div>
   );
 };
