@@ -16,6 +16,9 @@ import {
   upsertUberMetrics, getUberMetrics,
   upsertSalesSummaryMetrics, getSalesSummaryMetrics
 } from "@/lib/api/service";
+import { DigitalCommDashboard } from "../dashboard/DigitalCommDashboard";
+import { GoogleRatingsDashboard } from "../dashboard/GoogleRatingsDashboard";
+import { ComplaintsDashboard } from "../dashboard/ComplaintsDashboard";
 
 interface ServiceTimeData {
   month: string;
@@ -61,6 +64,7 @@ interface DigitalCommData {
   googleRating: string;
   uberRating: string;
   deliveryRating: string;
+  mlovers: string;
 }
 
 interface UberMetricsData {
@@ -136,7 +140,8 @@ export function ServiceDataForm() {
     store: "",
     googleRating: "",
     uberRating: "",
-    deliveryRating: ""
+    deliveryRating: "",
+    mlovers: ""
   });
 
   const [uberMetricsData, setUberMetricsData] = useState<UberMetricsData>({
@@ -319,12 +324,13 @@ export function ServiceDataForm() {
                 ...prev,
                 googleRating: data.google_rating?.toString() || "",
                 uberRating: data.uber_rating?.toString() || "",
-                deliveryRating: data.delivery_rating?.toString() || ""
+                deliveryRating: data.delivery_rating?.toString() || "",
+                mlovers: data.mlovers?.toString() || ""
               }));
             } else {
               setDigitalCommData(prev => ({
                 ...prev,
-                googleRating: "", uberRating: "", deliveryRating: ""
+                googleRating: "", uberRating: "", deliveryRating: "", mlovers: ""
               }));
             }
           } catch (error) {
@@ -522,7 +528,8 @@ export function ServiceDataForm() {
         record_date: recordDate,
         google_rating: parseFloat(digitalCommData.googleRating) || 0,
         uber_rating: parseFloat(digitalCommData.uberRating) || 0,
-        delivery_rating: parseFloat(digitalCommData.deliveryRating) || 0
+        delivery_rating: parseFloat(digitalCommData.deliveryRating) || 0,
+        mlovers: parseFloat(digitalCommData.mlovers) || 0
       });
 
       toast.success("Dados de comunicação digital salvos com sucesso!");
@@ -1114,6 +1121,8 @@ export function ServiceDataForm() {
                   </div>
                 </div>
 
+                <ComplaintsDashboard />
+
                 <Button type="submit" className="w-full md:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   Salvar Dados de Reclamações
@@ -1218,12 +1227,18 @@ export function ServiceDataForm() {
                       required
                     />
                   </div>
+
                 </div>
 
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Dados Digitais
-                </Button>
+                <GoogleRatingsDashboard />
+                <DigitalCommDashboard />
+
+                <div className="mt-6">
+                  <Button type="submit" className="w-full md:w-auto">
+                    <Save className="mr-2 h-4 w-4" />
+                    Salvar Dados Digitais
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>

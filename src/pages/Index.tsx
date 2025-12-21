@@ -332,25 +332,6 @@ const Index = () => {
             <ServiceDataForm />
           </TabsContent>
 
-          {/* People Tab */}
-          <TabsContent value="people" className="space-y-6">
-            <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
-              <UserCheck className="h-6 w-6 text-primary" />
-              Gestão de Pessoas - M.O. Mensal
-            </h2>
-            <Tabs defaultValue="dashboard" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="form">Preencher Dados</TabsTrigger>
-              </TabsList>
-              <TabsContent value="dashboard">
-                <PeopleDashboard />
-              </TabsContent>
-              <TabsContent value="form">
-                <PeopleDataForm />
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
 
           {/* Maintenance Tab */}
           <TabsContent value="maintenance" className="space-y-6">

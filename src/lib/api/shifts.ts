@@ -114,8 +114,10 @@ export async function saveShiftData(dateKey: string, data: ShiftData, year: numb
         throw new Error('User not authenticated');
     }
 
-    // Add prefix if not Amadora (or explicitly Amadora if we wanted to migrate, but let's keep legacy clean for now)
-    // Actually, let's keep 'Amadora' clean (no prefix) to preserve backward compatibility perfectly.
+    // Strip automatic columns that might cause null constraint violations on bulk upsert
+    const { id, created_at, updated_at, ...cleanData } = data as any;
+
+    // Add prefix if not Amadora
     const finalKey = storeName === 'Amadora' ? dateKey : `${storeName}:${dateKey}`;
 
     const { error } = await supabase
@@ -124,7 +126,7 @@ export async function saveShiftData(dateKey: string, data: ShiftData, year: numb
             user_id: user.id,
             date_key: finalKey,
             year,
-            ...data
+            ...cleanData
         }, {
             onConflict: 'user_id,date_key,year'
         });
@@ -147,11 +149,14 @@ export async function saveAllShiftData(allData: Record<string, ShiftData>, year:
 
     const records = Object.entries(allData).map(([dateKey, shiftData]) => {
         const finalKey = storeName === 'Amadora' ? dateKey : `${storeName}:${dateKey}`;
+        // Strip automatic columns
+        const { id, created_at, updated_at, ...cleanData } = shiftData as any;
+
         return {
             user_id: user.id,
             date_key: finalKey,
             year,
-            ...shiftData
+            ...cleanData
         };
     });
 
