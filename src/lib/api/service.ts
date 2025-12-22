@@ -384,3 +384,51 @@ export async function getAllSalesSummaryMetricsByDateRange(startDate: string, en
     if (error) throw error
     return data || []
 }
+
+// --- Consolidated Results ---
+export async function upsertConsolidatedResult(data: any) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data: existing } = await supabase
+        .from('consolidated_results')
+        .select('id')
+        .eq('month_name', data.month_name)
+        .eq('metric_category', data.metric_category)
+        .eq('metric_name', data.metric_name)
+        .maybeSingle()
+
+    if (existing) {
+        const { data: updated, error } = await supabase
+            .from('consolidated_results')
+            .update({ ...data, updated_at: new Date().toISOString() })
+            .eq('id', existing.id)
+            .select()
+            .maybeSingle()
+        if (error) throw error
+        return updated
+    } else {
+        const { data: inserted, error } = await supabase
+            .from('consolidated_results')
+            .insert([{ ...data, created_by: user.id }])
+            .select()
+            .maybeSingle()
+        if (error) throw error
+        return inserted
+    }
+}
+
+export async function getConsolidatedResults(category?: string) {
+    let query = supabase
+        .from('consolidated_results')
+        .select('*')
+        .order('record_date', { ascending: true })
+
+    if (category) {
+        query = query.eq('metric_category', category)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return data
+}

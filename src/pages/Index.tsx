@@ -14,6 +14,7 @@ import { MaintenanceDashboard } from "@/components/dashboard/MaintenanceDashboar
 import { ProductDataForm } from "@/components/forms/ProductDataForm";
 import { ProductDashboard } from "@/components/dashboard/ProductDashboard";
 import { YieldsAnalysis } from "@/components/dashboard/YieldsAnalysis";
+import { ResultsDashboard } from "@/components/dashboard/ResultsDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -116,11 +117,16 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7 bg-secondary h-auto p-1">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 bg-secondary h-auto p-1">
             <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BarChart3 className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Visão Geral</span>
               <span className="sm:hidden">Geral</span>
+            </TabsTrigger>
+            <TabsTrigger value="results" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Resultados da Organização</span>
+              <span className="sm:hidden">Resultados</span>
             </TabsTrigger>
             <TabsTrigger value="sales" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ShoppingCart className="mr-2 h-4 w-4" />
@@ -351,6 +357,10 @@ const Index = () => {
                 <MaintenanceDataForm />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+          {/* Results Tab */}
+          <TabsContent value="results" className="space-y-6">
+            <ResultsDashboard />
           </TabsContent>
         </Tabs>
       </main>
