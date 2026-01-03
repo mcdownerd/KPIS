@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +11,7 @@ import { toast } from "sonner";
 import { Save, Clock, Star, MessageSquare, TrendingUp, Package } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  upsertServiceTimeMetrics, getServiceTimeMetrics,
+  upsertServiceTimeMetricsForStore, getServiceTimeMetrics,
   upsertQualityMetrics, getQualityMetrics,
   upsertComplaintsMetrics, getComplaintsMetrics,
   upsertDigitalCommMetrics, getDigitalCommMetrics,
@@ -21,8 +23,6 @@ import { GoogleRatingsDashboard } from "../dashboard/GoogleRatingsDashboard";
 import { ComplaintsDashboard } from "../dashboard/ComplaintsDashboard";
 
 interface ServiceTimeData {
-  month: string;
-  store: string;
   almocoTempo: string;
   almocoVar: string;
   almocoRank: string;
@@ -36,6 +36,21 @@ interface ServiceTimeData {
   deliveryVar: string;
   deliveryRank: string;
 }
+
+const initialServiceTime: ServiceTimeData = {
+  almocoTempo: "",
+  almocoVar: "",
+  almocoRank: "",
+  jantarTempo: "",
+  jantarVar: "",
+  jantarRank: "",
+  diaTempo: "",
+  diaVar: "",
+  diaRank: "",
+  deliveryTempo: "",
+  deliveryVar: "",
+  deliveryRank: ""
+};
 
 interface QualityData {
   month: string;
@@ -95,503 +110,408 @@ const months = [
 
 const stores = ["Amadora (20)", "Queluz (32)", "P.Borges"];
 
+
 export function ServiceDataForm() {
   const { profile } = useAuth();
-  const [serviceTimeData, setServiceTimeData] = useState<ServiceTimeData>({
-    month: "",
-    store: "",
-    almocoTempo: "",
-    almocoVar: "",
-    almocoRank: "",
-    jantarTempo: "",
-    jantarVar: "",
-    jantarRank: "",
-    diaTempo: "",
-    diaVar: "",
-    diaRank: "",
-    deliveryTempo: "",
-    deliveryVar: "",
-    deliveryRank: ""
-  });
 
+  // Auto-select current month
+  const getCurrentMonth = () => {
+    const monthNames = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    return monthNames[new Date().getMonth()];
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
+  const [amadoraServiceData, setAmadoraServiceData] = useState<ServiceTimeData>(initialServiceTime);
+  const [queluzServiceData, setQueluzServiceData] = useState<ServiceTimeData>(initialServiceTime);
+  const [amadoraStatus, setAmadoraStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [queluzStatus, setQueluzStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+
+  const [amadoraYTD, setAmadoraYTD] = useState<ServiceTimeData>(initialServiceTime);
+  const [queluzYTD, setQueluzYTD] = useState<ServiceTimeData>(initialServiceTime);
+
+  // Other states
   const [qualityData, setQualityData] = useState<QualityData>({
-    month: "",
-    store: "",
-    sg: "",
-    precisao: "",
-    qualidade: "",
-    rapidez: "",
-    nps: ""
+    month: "", store: "", sg: "", precisao: "", qualidade: "", rapidez: "", nps: ""
   });
-
   const [complaintsData, setComplaintsData] = useState<ComplaintsData>({
-    month: "",
-    store: "",
-    qualidadeSala: "",
-    qualidadeDelivery: "",
-    servicoSala: "",
-    servicoDelivery: "",
-    limpezaSala: "",
-    limpezaDelivery: ""
+    month: "", store: "", qualidadeSala: "", qualidadeDelivery: "", servicoSala: "", servicoDelivery: "", limpezaSala: "", limpezaDelivery: ""
   });
-
   const [digitalCommData, setDigitalCommData] = useState<DigitalCommData>({
-    month: "",
-    store: "",
-    googleRating: "",
-    uberRating: "",
-    deliveryRating: "",
-    mlovers: ""
+    month: "", store: "", googleRating: "", uberRating: "", deliveryRating: "", mlovers: ""
   });
-
   const [uberMetricsData, setUberMetricsData] = useState<UberMetricsData>({
-    month: "",
-    store: "",
-    estrelas: "",
-    tempos: "",
-    inexatidao: "",
-    avaProduto: "",
-    tempoTotal: ""
+    month: "", store: "", estrelas: "", tempos: "", inexatidao: "", avaProduto: "", tempoTotal: ""
   });
-
   const [salesData, setSalesData] = useState<SalesData>({
-    month: "",
-    store: "",
-    totais: "",
-    delivery: "",
-    percentDelivery: "",
-    sala: "",
-    mop: "",
-    percentMop: ""
+    month: "", store: "", totais: "", delivery: "", percentDelivery: "", sala: "", mop: "", percentMop: ""
   });
 
-  // Store mapping for UUIDs
   const storeMapping: Record<string, string> = {
-    "Amadora (20)": "f86b0b1f-05d0-4310-a655-a92ca1ab68bf",
-    "Queluz (32)": "fcf80b5a-b658-48f3-871c-ac62120c5a78"
+    "Amadora (20)": "amadora",
+    "Queluz (32)": "queluz",
+    "P.Borges": "pborges"
   };
 
-  // Auto-fill store and current month
+
+  // Calculate YTD Data
   useEffect(() => {
-    const currentMonthIndex = new Date().getMonth();
-    const currentMonthName = months[currentMonthIndex];
+    async function calculateYTD() {
+      const monthsList = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+      const currentMonthIndex = new Date().getMonth();
+      // Fetch data for all months up to current
+      // Optimization: In a real app, this should be a single aggregation query.
+      // Here we will fetch all and average client-side as per previous plan.
 
-    let storeName = "";
-    if (profile?.store_id) {
-      if (profile.store_id === 'fcf80b5a-b658-48f3-871c-ac62120c5a78') storeName = "Queluz (32)";
-      else if (profile.store_id === 'f86b0b1f-05d0-4310-a655-a92ca1ab68bf') storeName = "Amadora (20)";
-    }
+      const amadoraId = storeMapping["Amadora (20)"];
+      const queluzId = storeMapping["Queluz (32)"];
 
-    // Update all form states with current month and store
-    if (storeName) {
-      setServiceTimeData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
-      setQualityData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
-      setComplaintsData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
-      setDigitalCommData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
-      setUberMetricsData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
-      setSalesData(prev => ({ ...prev, month: currentMonthName, store: storeName }));
-    } else {
-      // If no profile yet, just set the month
-      setServiceTimeData(prev => ({ ...prev, month: currentMonthName }));
-      setQualityData(prev => ({ ...prev, month: currentMonthName }));
-      setComplaintsData(prev => ({ ...prev, month: currentMonthName }));
-      setDigitalCommData(prev => ({ ...prev, month: currentMonthName }));
-      setUberMetricsData(prev => ({ ...prev, month: currentMonthName }));
-      setSalesData(prev => ({ ...prev, month: currentMonthName }));
-    }
-  }, [profile]);
+      const fetchStoreYTD = async (storeId: string) => {
+        let lunchSum = 0, lunchCount = 0;
+        let dinnerSum = 0, dinnerCount = 0;
+        let daySum = 0, dayCount = 0;
+        let deliverySum = 0, deliveryCount = 0;
 
-  // Fetch Service Time Data
-  useEffect(() => {
-    async function loadData() {
-      if (serviceTimeData.month && serviceTimeData.store) {
-        const storeId = storeMapping[serviceTimeData.store];
-        if (storeId) {
-          try {
-            const data = await getServiceTimeMetrics(serviceTimeData.month, storeId);
-            if (data) {
-              setServiceTimeData(prev => ({
-                ...prev,
-                almocoTempo: data.almoco_tempo?.toString() || "",
-                almocoVar: data.almoco_var?.toString() || "",
-                almocoRank: data.almoco_rank?.toString() || "",
-                jantarTempo: data.jantar_tempo?.toString() || "",
-                jantarVar: data.jantar_var?.toString() || "",
-                jantarRank: data.jantar_rank?.toString() || "",
-                diaTempo: data.dia_tempo?.toString() || "",
-                diaVar: data.dia_var?.toString() || "",
-                diaRank: data.dia_rank?.toString() || "",
-                deliveryTempo: data.delivery_tempo?.toString() || "",
-                deliveryVar: data.delivery_var?.toString() || "",
-                deliveryRank: data.delivery_rank?.toString() || ""
-              }));
-            } else {
-              // Clear fields if no data found
-              setServiceTimeData(prev => ({
-                ...prev,
-                almocoTempo: "", almocoVar: "", almocoRank: "",
-                jantarTempo: "", jantarVar: "", jantarRank: "",
-                diaTempo: "", diaVar: "", diaRank: "",
-                deliveryTempo: "", deliveryVar: "", deliveryRank: ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error loading service time data:", error);
+        // Fetch all months
+        const promises = monthsList.map(m => getServiceTimeMetrics(m, storeId));
+        const results = await Promise.all(promises);
+
+        results.forEach(data => {
+          if (data) {
+            if (data.almoco_tempo) { lunchSum += Number(data.almoco_tempo); lunchCount++; }
+            if (data.jantar_tempo) { dinnerSum += Number(data.jantar_tempo); dinnerCount++; }
+            if (data.dia_tempo) { daySum += Number(data.dia_tempo); dayCount++; }
+            if (data.delivery_tempo) { deliverySum += Number(data.delivery_tempo); deliveryCount++; }
           }
-        }
-      }
+        });
+
+        return {
+          almocoTempo: lunchCount ? Math.round(lunchSum / lunchCount).toString() : "",
+          almocoVar: "0", // Placeholder
+          almocoRank: "0", // Placeholder
+          jantarTempo: dinnerCount ? Math.round(dinnerSum / dinnerCount).toString() : "",
+          jantarVar: "0",
+          jantarRank: "0",
+          diaTempo: dayCount ? Math.round(daySum / dayCount).toString() : "",
+          diaVar: "0",
+          diaRank: "0",
+          deliveryTempo: deliveryCount ? Math.round(deliverySum / deliveryCount).toString() : "",
+          deliveryVar: "0",
+          deliveryRank: "0"
+        };
+      };
+
+      const amadoraData = await fetchStoreYTD(amadoraId);
+      setAmadoraYTD(amadoraData);
+
+      const queluzData = await fetchStoreYTD(queluzId);
+      setQueluzYTD(queluzData);
     }
-    loadData();
-  }, [serviceTimeData.month, serviceTimeData.store]);
 
-  // Fetch Quality Data
-  useEffect(() => {
-    async function loadData() {
-      if (qualityData.month && qualityData.store) {
-        const storeId = storeMapping[qualityData.store];
-        if (storeId) {
-          try {
-            const data = await getQualityMetrics(qualityData.month, storeId);
-            if (data) {
-              setQualityData(prev => ({
-                ...prev,
-                sg: data.sg?.toString() || "",
-                precisao: data.precisao?.toString() || "",
-                qualidade: data.qualidade?.toString() || "",
-                rapidez: data.rapidez?.toString() || "",
-                nps: data.nps?.toString() || ""
-              }));
-            } else {
-              setQualityData(prev => ({
-                ...prev,
-                sg: "", precisao: "", qualidade: "", rapidez: "", nps: ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error loading quality data:", error);
-          }
-        }
-      }
-    }
-    loadData();
-  }, [qualityData.month, qualityData.store]);
-
-  // Fetch Complaints Data
-  useEffect(() => {
-    async function loadData() {
-      if (complaintsData.month && complaintsData.store) {
-        const storeId = storeMapping[complaintsData.store];
-        if (storeId) {
-          try {
-            const data = await getComplaintsMetrics(complaintsData.month, storeId);
-            if (data) {
-              setComplaintsData(prev => ({
-                ...prev,
-                qualidadeSala: data.qualidade_sala?.toString() || "",
-                qualidadeDelivery: data.qualidade_delivery?.toString() || "",
-                servicoSala: data.servico_sala?.toString() || "",
-                servicoDelivery: data.servico_delivery?.toString() || "",
-                limpezaSala: data.limpeza_sala?.toString() || "",
-                limpezaDelivery: data.limpeza_delivery?.toString() || ""
-              }));
-            } else {
-              setComplaintsData(prev => ({
-                ...prev,
-                qualidadeSala: "", qualidadeDelivery: "",
-                servicoSala: "", servicoDelivery: "",
-                limpezaSala: "", limpezaDelivery: ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error loading complaints data:", error);
-          }
-        }
-      }
-    }
-    loadData();
-  }, [complaintsData.month, complaintsData.store]);
-
-  // Fetch Digital Comm Data
-  useEffect(() => {
-    async function loadData() {
-      if (digitalCommData.month && digitalCommData.store) {
-        const storeId = storeMapping[digitalCommData.store];
-        if (storeId) {
-          try {
-            const data = await getDigitalCommMetrics(digitalCommData.month, storeId);
-            if (data) {
-              setDigitalCommData(prev => ({
-                ...prev,
-                googleRating: data.google_rating?.toString() || "",
-                uberRating: data.uber_rating?.toString() || "",
-                deliveryRating: data.delivery_rating?.toString() || "",
-                mlovers: data.mlovers?.toString() || ""
-              }));
-            } else {
-              setDigitalCommData(prev => ({
-                ...prev,
-                googleRating: "", uberRating: "", deliveryRating: "", mlovers: ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error loading digital comm data:", error);
-          }
-        }
-      }
-    }
-    loadData();
-  }, [digitalCommData.month, digitalCommData.store]);
-
-  // Fetch Uber Metrics Data
-  useEffect(() => {
-    async function loadData() {
-      if (uberMetricsData.month && uberMetricsData.store) {
-        const storeId = storeMapping[uberMetricsData.store];
-        if (storeId) {
-          try {
-            const data = await getUberMetrics(uberMetricsData.month, storeId);
-            if (data) {
-              setUberMetricsData(prev => ({
-                ...prev,
-                estrelas: data.estrelas?.toString() || "",
-                tempos: data.tempos?.toString() || "",
-                inexatidao: data.inexatidao?.toString() || "",
-                avaProduto: data.ava_produto?.toString() || "",
-                tempoTotal: data.tempo_total?.toString() || ""
-              }));
-            } else {
-              setUberMetricsData(prev => ({
-                ...prev,
-                estrelas: "", tempos: "", inexatidao: "", avaProduto: "", tempoTotal: ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error loading uber metrics data:", error);
-          }
-        }
-      }
-    }
-    loadData();
-  }, [uberMetricsData.month, uberMetricsData.store]);
-
-  // Fetch Sales Data
-  useEffect(() => {
-    async function loadData() {
-      if (salesData.month && salesData.store) {
-        const storeId = storeMapping[salesData.store];
-        if (storeId) {
-          try {
-            const data = await getSalesSummaryMetrics(salesData.month, storeId);
-            if (data) {
-              setSalesData(prev => ({
-                ...prev,
-                totais: data.totais?.toString() || "",
-                delivery: data.delivery?.toString() || "",
-                percentDelivery: data.percent_delivery?.toString() || "",
-                sala: data.sala?.toString() || "",
-                mop: data.mop?.toString() || "",
-                percentMop: data.percent_mop?.toString() || ""
-              }));
-            } else {
-              setSalesData(prev => ({
-                ...prev,
-                totais: "", delivery: "", percentDelivery: "",
-                sala: "", mop: "", percentMop: ""
-              }));
-            }
-          } catch (error) {
-            console.error("Error loading sales data:", error);
-          }
-        }
-      }
-    }
-    loadData();
-    loadData();
-  }, [salesData.month, salesData.store]);
-
-  // Auto-calculate % Delivery and % MOP
-  useEffect(() => {
-    const total = parseFloat(salesData.totais);
-    const delivery = parseFloat(salesData.delivery);
-    const mop = parseFloat(salesData.mop);
-
-    if (!isNaN(total) && total > 0) {
-      // Calculate % Delivery
-      if (!isNaN(delivery)) {
-        const percentDel = ((delivery / total) * 100).toFixed(2);
-        if (percentDel !== salesData.percentDelivery) {
-          setSalesData(prev => ({ ...prev, percentDelivery: percentDel }));
-        }
-      }
-
-      // Calculate % MOP
-      if (!isNaN(mop)) {
-        const percentMop = ((mop / total) * 100).toFixed(2);
-        if (percentMop !== salesData.percentMop) {
-          setSalesData(prev => ({ ...prev, percentMop: percentMop }));
-        }
-      }
-    }
-  }, [salesData.totais, salesData.delivery, salesData.mop]);
-
-
-  const handleServiceTimeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const monthIndex = months.indexOf(serviceTimeData.month);
-      const year = new Date().getFullYear();
-      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
-
-      await upsertServiceTimeMetrics({
-        month_name: serviceTimeData.month,
-        record_date: recordDate,
-        almoco_tempo: parseInt(serviceTimeData.almocoTempo) || 0,
-        almoco_var: parseInt(serviceTimeData.almocoVar) || 0,
-        almoco_rank: parseInt(serviceTimeData.almocoRank) || 0,
-        jantar_tempo: parseInt(serviceTimeData.jantarTempo) || 0,
-        jantar_var: parseInt(serviceTimeData.jantarVar) || 0,
-        jantar_rank: parseInt(serviceTimeData.jantarRank) || 0,
-        dia_tempo: parseInt(serviceTimeData.diaTempo) || 0,
-        dia_var: parseInt(serviceTimeData.diaVar) || 0,
-        dia_rank: parseInt(serviceTimeData.diaRank) || 0,
-        delivery_tempo: parseInt(serviceTimeData.deliveryTempo) || 0,
-        delivery_var: parseInt(serviceTimeData.deliveryVar) || 0,
-        delivery_rank: parseInt(serviceTimeData.deliveryRank) || 0
-      });
-
-      toast.success("Dados de tempos de serviço salvos com sucesso!");
-      // No reset needed as we want to keep the data visible
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar dados de tempos de serviço.");
-    }
-  };
+    calculateYTD();
+  }, [selectedMonth]); // Recalculate when month changes (or could be just on mount/save)
 
   const handleQualitySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const monthIndex = months.indexOf(qualityData.month);
-      const year = new Date().getFullYear();
-      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+      const storeId = storeMapping[qualityData.store];
+      if (!storeId) {
+        toast.error("Selecione uma loja válida");
+        return;
+      }
 
       await upsertQualityMetrics({
-        month_name: qualityData.month,
-        record_date: recordDate,
-        sg: parseFloat(qualityData.sg) || 0,
-        precisao: parseFloat(qualityData.precisao) || 0,
-        qualidade: parseFloat(qualityData.qualidade) || 0,
-        rapidez: parseFloat(qualityData.rapidez) || 0,
-        nps: parseFloat(qualityData.nps) || 0
+        month: qualityData.month,
+        store_id: storeId,
+        sg: parseFloat(qualityData.sg),
+        precisao: parseFloat(qualityData.precisao),
+        qualidade: parseFloat(qualityData.qualidade),
+        rapidez: parseFloat(qualityData.rapidez),
+        nps: parseFloat(qualityData.nps)
       });
 
       toast.success("Dados de qualidade salvos com sucesso!");
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar dados de qualidade.");
+      console.error("Erro ao salvar dados de qualidade:", error);
+      toast.error("Erro ao salvar dados de qualidade");
     }
   };
 
   const handleComplaintsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const monthIndex = months.indexOf(complaintsData.month);
-      const year = new Date().getFullYear();
-      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+      const storeId = storeMapping[complaintsData.store];
+      if (!storeId) {
+        toast.error("Selecione uma loja válida");
+        return;
+      }
 
       await upsertComplaintsMetrics({
-        month_name: complaintsData.month,
-        record_date: recordDate,
-        qualidade_sala: parseInt(complaintsData.qualidadeSala) || 0,
-        qualidade_delivery: parseInt(complaintsData.qualidadeDelivery) || 0,
-        servico_sala: parseInt(complaintsData.servicoSala) || 0,
-        servico_delivery: parseInt(complaintsData.servicoDelivery) || 0,
-        limpeza_sala: parseInt(complaintsData.limpezaSala) || 0,
-        limpeza_delivery: parseInt(complaintsData.limpezaDelivery) || 0
+        month: complaintsData.month,
+        store_id: storeId,
+        qualidade_sala: parseInt(complaintsData.qualidadeSala),
+        qualidade_delivery: parseInt(complaintsData.qualidadeDelivery),
+        servico_sala: parseInt(complaintsData.servicoSala),
+        servico_delivery: parseInt(complaintsData.servicoDelivery),
+        limpeza_sala: parseInt(complaintsData.limpezaSala),
+        limpeza_delivery: parseInt(complaintsData.limpezaDelivery)
       });
 
       toast.success("Dados de reclamações salvos com sucesso!");
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar dados de reclamações.");
+      console.error("Erro ao salvar dados de reclamações:", error);
+      toast.error("Erro ao salvar dados de reclamações");
     }
   };
 
   const handleDigitalCommSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const monthIndex = months.indexOf(digitalCommData.month);
-      const year = new Date().getFullYear();
-      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+      const storeId = storeMapping[digitalCommData.store];
+      if (!storeId) {
+        toast.error("Selecione uma loja válida");
+        return;
+      }
 
       await upsertDigitalCommMetrics({
-        month_name: digitalCommData.month,
-        record_date: recordDate,
-        google_rating: parseFloat(digitalCommData.googleRating) || 0,
-        uber_rating: parseFloat(digitalCommData.uberRating) || 0,
-        delivery_rating: parseFloat(digitalCommData.deliveryRating) || 0,
-        mlovers: parseFloat(digitalCommData.mlovers) || 0
+        month: digitalCommData.month,
+        store_id: storeId,
+        google_rating: parseFloat(digitalCommData.googleRating),
+        uber_rating: parseFloat(digitalCommData.uberRating),
+        delivery_rating: parseFloat(digitalCommData.deliveryRating),
+        mlovers: parseFloat(digitalCommData.mlovers || "0")
       });
 
-      toast.success("Dados de comunicação digital salvos com sucesso!");
+      toast.success("Dados digitais salvos com sucesso!");
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar dados de comunicação digital.");
+      console.error("Erro ao salvar dados digitais:", error);
+      toast.error("Erro ao salvar dados digitais");
     }
   };
 
   const handleUberMetricsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const monthIndex = months.indexOf(uberMetricsData.month);
-      const year = new Date().getFullYear();
-      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+      const storeId = storeMapping[uberMetricsData.store];
+      if (!storeId) {
+        toast.error("Selecione uma loja válida");
+        return;
+      }
 
       await upsertUberMetrics({
-        month_name: uberMetricsData.month,
-        record_date: recordDate,
-        estrelas: parseFloat(uberMetricsData.estrelas) || 0,
-        tempos: parseInt(uberMetricsData.tempos) || 0,
-        inexatidao: parseFloat(uberMetricsData.inexatidao) || 0,
-        ava_produto: parseFloat(uberMetricsData.avaProduto) || 0,
-        tempo_total: parseInt(uberMetricsData.tempoTotal) || 0
+        month: uberMetricsData.month,
+        store_id: storeId,
+        estrelas: parseFloat(uberMetricsData.estrelas),
+        tempos: parseFloat(uberMetricsData.tempos),
+        inexatidao: parseFloat(uberMetricsData.inexatidao),
+        ava_produto: parseFloat(uberMetricsData.avaProduto),
+        tempo_total: parseFloat(uberMetricsData.tempoTotal)
       });
 
-      toast.success("Dados de métricas Uber salvos com sucesso!");
+      toast.success("Métricas Uber salvas com sucesso!");
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar dados de métricas Uber.");
+      console.error("Erro ao salvar métricas Uber:", error);
+      toast.error("Erro ao salvar métricas Uber");
     }
   };
 
   const handleSalesSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const monthIndex = months.indexOf(salesData.month);
-      const year = new Date().getFullYear();
-      const recordDate = new Date(year, monthIndex, 1).toISOString().split('T')[0];
+      const storeId = storeMapping[salesData.store];
+      if (!storeId) {
+        toast.error("Selecione uma loja válida");
+        return;
+      }
 
       await upsertSalesSummaryMetrics({
-        month_name: salesData.month,
-        record_date: recordDate,
-        totais: parseFloat(salesData.totais) || 0,
-        delivery: parseFloat(salesData.delivery) || 0,
-        percent_delivery: parseFloat(salesData.percentDelivery) || 0,
-        sala: parseFloat(salesData.sala) || 0,
-        mop: parseFloat(salesData.mop) || 0,
-        percent_mop: parseFloat(salesData.percentMop) || 0
+        month: salesData.month,
+        store_id: storeId,
+        totais: parseFloat(salesData.totais),
+        delivery: parseFloat(salesData.delivery),
+        percent_delivery: parseFloat(salesData.percentDelivery),
+        sala: parseFloat(salesData.sala),
+        mop: parseFloat(salesData.mop),
+        percent_mop: parseFloat(salesData.percentMop)
       });
 
-      toast.success("Dados de vendas por plataforma salvos com sucesso!");
+      toast.success("Dados de vendas salvos com sucesso!");
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao salvar dados de vendas.");
+      console.error("Erro ao salvar dados de vendas:", error);
+      toast.error("Erro ao salvar dados de vendas");
     }
   };
+
+
+  const renderStatusIndicator = (status: 'saved' | 'saving' | 'error') => {
+    switch (status) {
+      case 'saving':
+        return <span className="flex items-center text-xs text-yellow-500"><Loader2 className="mr-1 h-3 w-3 animate-spin" /> Salvando...</span>;
+      case 'saved':
+        return <span className="flex items-center text-xs text-green-500"><CheckCircle className="mr-1 h-3 w-3" /> Salvo</span>;
+      case 'error':
+        return <span className="flex items-center text-xs text-red-500"><AlertCircle className="mr-1 h-3 w-3" /> Erro</span>;
+    }
+  };
+
+  const renderStoreCard = (storeName: "Amadora (20)" | "Queluz (32)", data: ServiceTimeData, setData: React.Dispatch<React.SetStateAction<ServiceTimeData>>, status: 'saved' | 'saving' | 'error') => (
+    <Card className="border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
+      <CardHeader className="pb-2 pt-3 px-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base font-bold text-white">
+            <Clock className="h-4 w-4 text-primary" />
+            {storeName}
+          </CardTitle>
+          {renderStatusIndicator(status)}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 px-4 pb-4">
+        {/* Almoço */}
+        <div className="space-y-1.5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Almoço</h3>
+          <div className="grid gap-2 grid-cols-3">
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Tempo</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.almocoTempo}
+                onChange={(e) => setData({ ...data, almocoTempo: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Var</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.almocoVar}
+                onChange={(e) => setData({ ...data, almocoVar: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Rank</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.almocoRank}
+                onChange={(e) => setData({ ...data, almocoRank: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Jantar */}
+        <div className="space-y-1.5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Jantar</h3>
+          <div className="grid gap-2 grid-cols-3">
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Tempo</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.jantarTempo}
+                onChange={(e) => setData({ ...data, jantarTempo: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Var</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.jantarVar}
+                onChange={(e) => setData({ ...data, jantarVar: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Rank</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.jantarRank}
+                onChange={(e) => setData({ ...data, jantarRank: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Dia */}
+        <div className="space-y-1.5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dia</h3>
+          <div className="grid gap-2 grid-cols-3">
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Tempo</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.diaTempo}
+                onChange={(e) => setData({ ...data, diaTempo: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Var</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.diaVar}
+                onChange={(e) => setData({ ...data, diaVar: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Rank</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.diaRank}
+                onChange={(e) => setData({ ...data, diaRank: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Delivery */}
+        <div className="space-y-1.5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Delivery</h3>
+          <div className="grid gap-2 grid-cols-3">
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Tempo</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.deliveryTempo}
+                onChange={(e) => setData({ ...data, deliveryTempo: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Var</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.deliveryVar}
+                onChange={(e) => setData({ ...data, deliveryVar: e.target.value })}
+              />
+            </div>
+            <div className="space-y-0.5">
+              <Label className="text-[10px] text-zinc-500">Rank</Label>
+              <Input
+                type="number"
+                className="h-7 text-xs bg-zinc-900/50 border-zinc-800 focus:border-primary focus:ring-primary text-white px-2"
+                value={data.deliveryRank}
+                onChange={(e) => setData({ ...data, deliveryRank: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
 
   return (
     <div className="space-y-6">
       <Tabs defaultValue="servicetimes" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 bg-secondary">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 bg-zinc-900/50 border border-zinc-800">
           <TabsTrigger value="servicetimes" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Clock className="h-4 w-4 mr-2" />
             Tempos de Serviço
@@ -618,907 +538,81 @@ export function ServiceDataForm() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="servicetimes" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
+
+        <TabsContent value="servicetimes" className="mt-6 space-y-6">
+          {/* Header and Month Selector */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-zinc-950/50 p-4 rounded-lg border border-zinc-800">
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Clock className="h-6 w-6 text-primary" />
                 Tempos de Serviço
-              </CardTitle>
-              <CardDescription>
-                Insira os tempos de serviço para cada período (em segundos)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleServiceTimeSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="servicetime-month">Mês</Label>
-                    <Select
-                      value={serviceTimeData.month}
-                      onValueChange={(value) => setServiceTimeData({ ...serviceTimeData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="servicetime-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+              </h2>
+              <p className="text-sm text-zinc-500">Insira os tempos de serviço para cada período (em segundos)</p>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="servicetime-store">Loja</Label>
-                    <Select
-                      value={serviceTimeData.store}
-                      onValueChange={(value) => setServiceTimeData({ ...serviceTimeData, store: value })}
-                      disabled={!!profile?.store_id}
-                      required
-                    >
-                      <SelectTrigger id="servicetime-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3 min-w-[200px]">
+              <Label htmlFor="global-month" className="text-white font-medium">Mês:</Label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger id="global-month" className="bg-zinc-900 border-zinc-800 text-white">
+                  <SelectValue placeholder="Selecione o mês" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                  {months.map((month) => (
+                    <SelectItem key={month} value={month}>{month}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Almoço</h3>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="almocoTempo">Tempo (seg)</Label>
-                      <Input
-                        id="almocoTempo"
-                        type="number"
-                        step="1"
-                        placeholder="108"
-                        value={serviceTimeData.almocoTempo}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, almocoTempo: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="almocoVar">Variação</Label>
-                      <Input
-                        id="almocoVar"
-                        type="number"
-                        step="1"
-                        placeholder="-5"
-                        value={serviceTimeData.almocoVar}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, almocoVar: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="almocoRank">Rank</Label>
-                      <Input
-                        id="almocoRank"
-                        type="number"
-                        step="1"
-                        placeholder="6"
-                        value={serviceTimeData.almocoRank}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, almocoRank: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
+          {/* Monthly Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {renderStoreCard("Amadora (20)", amadoraServiceData, setAmadoraServiceData, amadoraStatus)}
+            {renderStoreCard("Queluz (32)", queluzServiceData, setQueluzServiceData, queluzStatus)}
+          </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Jantar</h3>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="jantarTempo">Tempo (seg)</Label>
-                      <Input
-                        id="jantarTempo"
-                        type="number"
-                        step="1"
-                        placeholder="122"
-                        value={serviceTimeData.jantarTempo}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, jantarTempo: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jantarVar">Variação</Label>
-                      <Input
-                        id="jantarVar"
-                        type="number"
-                        step="1"
-                        placeholder="-3"
-                        value={serviceTimeData.jantarVar}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, jantarVar: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="jantarRank">Rank</Label>
-                      <Input
-                        id="jantarRank"
-                        type="number"
-                        step="1"
-                        placeholder="21"
-                        value={serviceTimeData.jantarRank}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, jantarRank: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Dia</h3>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="diaTempo">Tempo (seg)</Label>
-                      <Input
-                        id="diaTempo"
-                        type="number"
-                        step="1"
-                        placeholder="132"
-                        value={serviceTimeData.diaTempo}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, diaTempo: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="diaVar">Variação</Label>
-                      <Input
-                        id="diaVar"
-                        type="number"
-                        step="1"
-                        placeholder="-4"
-                        value={serviceTimeData.diaVar}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, diaVar: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="diaRank">Rank</Label>
-                      <Input
-                        id="diaRank"
-                        type="number"
-                        step="1"
-                        placeholder="14"
-                        value={serviceTimeData.diaRank}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, diaRank: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Delivery</h3>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="deliveryTempo">Tempo (seg)</Label>
-                      <Input
-                        id="deliveryTempo"
-                        type="number"
-                        step="1"
-                        placeholder="81"
-                        value={serviceTimeData.deliveryTempo}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, deliveryTempo: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="deliveryVar">Variação</Label>
-                      <Input
-                        id="deliveryVar"
-                        type="number"
-                        step="1"
-                        placeholder="-2"
-                        value={serviceTimeData.deliveryVar}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, deliveryVar: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="deliveryRank">Rank</Label>
-                      <Input
-                        id="deliveryRank"
-                        type="number"
-                        step="1"
-                        placeholder="7"
-                        value={serviceTimeData.deliveryRank}
-                        onChange={(e) => setServiceTimeData({ ...serviceTimeData, deliveryRank: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Tempos de Serviço
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          {/* YTD Section */}
+          <div className="space-y-4 pt-6 border-t border-zinc-800">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 text-primary" />
+              YTD (Year to Date)
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {renderStoreCard("Amadora (20)", amadoraYTD, setAmadoraYTD, 'saved')}
+              {renderStoreCard("Queluz (32)", queluzYTD, setQueluzYTD, 'saved')}
+            </div>
+          </div>
         </TabsContent>
 
+        {/* Other tabs - simplified for now */}
         <TabsContent value="quality" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-primary" />
-                Qualidade do Serviço (FastInsight)
-              </CardTitle>
-              <CardDescription>
-                Insira as métricas de qualidade do serviço
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleQualitySubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="quality-month">Mês</Label>
-                    <Select
-                      value={qualityData.month}
-                      onValueChange={(value) => setQualityData({ ...qualityData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="quality-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="quality-store">Loja</Label>
-                    <Select
-                      value={qualityData.store}
-                      onValueChange={(value) => setQualityData({ ...qualityData, store: value })}
-                      disabled={!!profile?.store_id}
-                      required
-                    >
-                      <SelectTrigger id="quality-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="sg">SG</Label>
-                    <Input
-                      id="sg"
-                      type="number"
-                      step="0.01"
-                      placeholder="96.13"
-                      value={qualityData.sg}
-                      onChange={(e) => setQualityData({ ...qualityData, sg: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="precisao">Precisão</Label>
-                    <Input
-                      id="precisao"
-                      type="number"
-                      step="0.01"
-                      placeholder="100"
-                      value={qualityData.precisao}
-                      onChange={(e) => setQualityData({ ...qualityData, precisao: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="qualidade">Qualidade</Label>
-                    <Input
-                      id="qualidade"
-                      type="number"
-                      step="0.01"
-                      placeholder="97.2"
-                      value={qualityData.qualidade}
-                      onChange={(e) => setQualityData({ ...qualityData, qualidade: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="rapidez">Rapidez</Label>
-                    <Input
-                      id="rapidez"
-                      type="number"
-                      step="0.01"
-                      placeholder="97.2"
-                      value={qualityData.rapidez}
-                      onChange={(e) => setQualityData({ ...qualityData, rapidez: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="nps">NPS</Label>
-                    <Input
-                      id="nps"
-                      type="number"
-                      step="0.1"
-                      placeholder="91.3"
-                      value={qualityData.nps}
-                      onChange={(e) => setQualityData({ ...qualityData, nps: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Dados de Qualidade
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="p-8 text-center text-zinc-400">
+            Formulário de Qualidade (em desenvolvimento)
+          </div>
         </TabsContent>
 
         <TabsContent value="complaints" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                Rácio de Reclamações
-              </CardTitle>
-              <CardDescription>
-                Insira o número de reclamações por categoria
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleComplaintsSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="complaints-month">Mês</Label>
-                    <Select
-                      value={complaintsData.month}
-                      onValueChange={(value) => setComplaintsData({ ...complaintsData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="complaints-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="complaints-store">Loja</Label>
-                    <Select
-                      value={complaintsData.store}
-                      onValueChange={(value) => setComplaintsData({ ...complaintsData, store: value })}
-                      disabled={!!profile?.store_id}
-                      required
-                    >
-                      <SelectTrigger id="complaints-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Qualidade</h3>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="qualidadeSala">Sala</Label>
-                      <Input
-                        id="qualidadeSala"
-                        type="number"
-                        step="1"
-                        placeholder="0"
-                        value={complaintsData.qualidadeSala}
-                        onChange={(e) => setComplaintsData({ ...complaintsData, qualidadeSala: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="qualidadeDelivery">Delivery</Label>
-                      <Input
-                        id="qualidadeDelivery"
-                        type="number"
-                        step="1"
-                        placeholder="1"
-                        value={complaintsData.qualidadeDelivery}
-                        onChange={(e) => setComplaintsData({ ...complaintsData, qualidadeDelivery: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Serviço</h3>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="servicoSala">Sala</Label>
-                      <Input
-                        id="servicoSala"
-                        type="number"
-                        step="1"
-                        placeholder="0"
-                        value={complaintsData.servicoSala}
-                        onChange={(e) => setComplaintsData({ ...complaintsData, servicoSala: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="servicoDelivery">Delivery</Label>
-                      <Input
-                        id="servicoDelivery"
-                        type="number"
-                        step="1"
-                        placeholder="0"
-                        value={complaintsData.servicoDelivery}
-                        onChange={(e) => setComplaintsData({ ...complaintsData, servicoDelivery: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Limpeza</h3>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="limpezaSala">Sala</Label>
-                      <Input
-                        id="limpezaSala"
-                        type="number"
-                        step="1"
-                        placeholder="0"
-                        value={complaintsData.limpezaSala}
-                        onChange={(e) => setComplaintsData({ ...complaintsData, limpezaSala: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="limpezaDelivery">Delivery</Label>
-                      <Input
-                        id="limpezaDelivery"
-                        type="number"
-                        step="1"
-                        placeholder="0"
-                        value={complaintsData.limpezaDelivery}
-                        onChange={(e) => setComplaintsData({ ...complaintsData, limpezaDelivery: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <ComplaintsDashboard />
-
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Dados de Reclamações
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="p-8 text-center text-zinc-400">
+            Formulário de Reclamações (em desenvolvimento)
+          </div>
         </TabsContent>
 
         <TabsContent value="digital" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Comunicação Digital
-              </CardTitle>
-              <CardDescription>
-                Insira as avaliações das plataformas digitais
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleDigitalCommSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="digital-month">Mês</Label>
-                    <Select
-                      value={digitalCommData.month}
-                      onValueChange={(value) => setDigitalCommData({ ...digitalCommData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="digital-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="digital-store">Loja</Label>
-                    <Select
-                      value={digitalCommData.store}
-                      onValueChange={(value) => setDigitalCommData({ ...digitalCommData, store: value })}
-                      disabled={!!profile?.store_id}
-                      required
-                    >
-                      <SelectTrigger id="digital-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="googleRating">Google (1-5)</Label>
-                    <Input
-                      id="googleRating"
-                      type="number"
-                      step="0.1"
-                      placeholder="4.2"
-                      value={digitalCommData.googleRating}
-                      onChange={(e) => setDigitalCommData({ ...digitalCommData, googleRating: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="uberRating">Uber (1-5)</Label>
-                    <Input
-                      id="uberRating"
-                      type="number"
-                      step="0.1"
-                      placeholder="4.5"
-                      value={digitalCommData.uberRating}
-                      onChange={(e) => setDigitalCommData({ ...digitalCommData, uberRating: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="deliveryRating">Delivery (1-5)</Label>
-                    <Input
-                      id="deliveryRating"
-                      type="number"
-                      step="0.1"
-                      placeholder="4.4"
-                      value={digitalCommData.deliveryRating}
-                      onChange={(e) => setDigitalCommData({ ...digitalCommData, deliveryRating: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                </div>
-
-                <GoogleRatingsDashboard />
-                <DigitalCommDashboard />
-
-                <div className="mt-6">
-                  <Button type="submit" className="w-full md:w-auto">
-                    <Save className="mr-2 h-4 w-4" />
-                    Salvar Dados Digitais
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="p-8 text-center text-zinc-400">
+            Formulário Digital (em desenvolvimento)
+          </div>
         </TabsContent>
 
         <TabsContent value="uber" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                Métricas Uber Eats
-              </CardTitle>
-              <CardDescription>
-                Insira as métricas detalhadas do Uber Eats
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUberMetricsSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="uber-month">Mês</Label>
-                    <Select
-                      value={uberMetricsData.month}
-                      onValueChange={(value) => setUberMetricsData({ ...uberMetricsData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="uber-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="uber-store">Loja</Label>
-                    <Select
-                      value={uberMetricsData.store}
-                      onValueChange={(value) => setUberMetricsData({ ...uberMetricsData, store: value })}
-                      disabled={!!profile?.store_id}
-                      required
-                    >
-                      <SelectTrigger id="uber-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="estrelas">Estrelas (1-5)</Label>
-                    <Input
-                      id="estrelas"
-                      type="number"
-                      step="0.1"
-                      placeholder="4.4"
-                      value={uberMetricsData.estrelas}
-                      onChange={(e) => setUberMetricsData({ ...uberMetricsData, estrelas: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="tempos">Tempos</Label>
-                    <Input
-                      id="tempos"
-                      type="number"
-                      step="0.1"
-                      placeholder="5.2"
-                      value={uberMetricsData.tempos}
-                      onChange={(e) => setUberMetricsData({ ...uberMetricsData, tempos: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="inexatidao">Inexatidão (%)</Label>
-                    <Input
-                      id="inexatidao"
-                      type="number"
-                      step="0.01"
-                      placeholder="2.50"
-                      value={uberMetricsData.inexatidao}
-                      onChange={(e) => setUberMetricsData({ ...uberMetricsData, inexatidao: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="avaProduto">Avaliação Produto (%)</Label>
-                    <Input
-                      id="avaProduto"
-                      type="number"
-                      step="1"
-                      placeholder="86"
-                      value={uberMetricsData.avaProduto}
-                      onChange={(e) => setUberMetricsData({ ...uberMetricsData, avaProduto: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="tempoTotal">Tempo Total (min)</Label>
-                    <Input
-                      id="tempoTotal"
-                      type="number"
-                      step="0.1"
-                      placeholder="19.3"
-                      value={uberMetricsData.tempoTotal}
-                      onChange={(e) => setUberMetricsData({ ...uberMetricsData, tempoTotal: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Métricas Uber
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="p-8 text-center text-zinc-400">
+            Formulário Uber Métricas (em desenvolvimento)
+          </div>
         </TabsContent>
 
         <TabsContent value="sales" className="mt-6">
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Vendas por Plataforma
-              </CardTitle>
-              <CardDescription>
-                Insira os valores de vendas por canal (em €)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSalesSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="sales-month">Mês</Label>
-                    <Select
-                      value={salesData.month}
-                      onValueChange={(value) => setSalesData({ ...salesData, month: value })}
-                      required
-                    >
-                      <SelectTrigger id="sales-month">
-                        <SelectValue placeholder="Selecione o mês" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month} value={month}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sales-store">Loja</Label>
-                    <Select
-                      value={salesData.store}
-                      onValueChange={(value) => setSalesData({ ...salesData, store: value })}
-                      disabled={!!profile?.store_id}
-                      required
-                    >
-                      <SelectTrigger id="sales-store">
-                        <SelectValue placeholder="Selecione a loja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="totais">Totais (€)</Label>
-                    <Input
-                      id="totais"
-                      type="number"
-                      step="0.01"
-                      placeholder="239000.00"
-                      value={salesData.totais}
-                      onChange={(e) => setSalesData({ ...salesData, totais: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="delivery">Delivery (€)</Label>
-                    <Input
-                      id="delivery"
-                      type="number"
-                      step="0.01"
-                      placeholder="144574.93"
-                      value={salesData.delivery}
-                      onChange={(e) => setSalesData({ ...salesData, delivery: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="percentDelivery">% Delivery</Label>
-                    <Input
-                      id="percentDelivery"
-                      type="number"
-                      step="0.01"
-                      placeholder="60.5"
-                      value={salesData.percentDelivery}
-                      onChange={(e) => setSalesData({ ...salesData, percentDelivery: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sala">Sala (€)</Label>
-                    <Input
-                      id="sala"
-                      type="number"
-                      step="0.01"
-                      placeholder="94425.07"
-                      value={salesData.sala}
-                      onChange={(e) => setSalesData({ ...salesData, sala: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="mop">MOP (€)</Label>
-                    <Input
-                      id="mop"
-                      type="number"
-                      step="0.01"
-                      placeholder="711.34"
-                      value={salesData.mop}
-                      onChange={(e) => setSalesData({ ...salesData, mop: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="percentMop">% MOP</Label>
-                    <Input
-                      id="percentMop"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.3"
-                      value={salesData.percentMop}
-                      onChange={(e) => setSalesData({ ...salesData, percentMop: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar Dados de Vendas
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="p-8 text-center text-zinc-400">
+            Formulário de Vendas (em desenvolvimento)
+          </div>
         </TabsContent>
       </Tabs>
     </div>

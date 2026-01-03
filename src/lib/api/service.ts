@@ -16,14 +16,15 @@ async function getUserStore() {
 }
 
 // --- Service Time Metrics ---
-export async function upsertServiceTimeMetrics(data: any) {
-    const { user, store_id } = await getUserStore()
+export async function upsertServiceTimeMetricsForStore(data: any, storeId: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
 
     // Check for existing record
     const { data: existing } = await supabase
         .from('service_time_metrics')
         .select('id')
-        .eq('store_id', store_id)
+        .eq('store_id', storeId)
         .eq('month_name', data.month_name)
         .eq('record_date', data.record_date)
         .maybeSingle()
@@ -40,7 +41,7 @@ export async function upsertServiceTimeMetrics(data: any) {
     } else {
         const { data: inserted, error } = await supabase
             .from('service_time_metrics')
-            .insert([{ ...data, store_id, created_by: user.id }])
+            .insert([{ ...data, store_id: storeId, created_by: user.id }])
             .select()
             .single()
         if (error) throw error

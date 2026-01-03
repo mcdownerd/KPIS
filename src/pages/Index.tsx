@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LocationTabs } from "@/components/LocationTabs";
@@ -15,6 +16,7 @@ import { ProductDataForm } from "@/components/forms/ProductDataForm";
 import { ProductDashboard } from "@/components/dashboard/ProductDashboard";
 import { YieldsAnalysis } from "@/components/dashboard/YieldsAnalysis";
 import { ResultsDashboard } from "@/components/dashboard/ResultsDashboard";
+import { ServiceDashboard } from "@/components/dashboard/ServiceDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
@@ -32,6 +34,7 @@ const Index = () => {
   const { toast } = useToast();
   const { isAdmin } = useAuth();
   const { metrics, loading } = useDashboardMetrics();
+  const [serviceTab, setServiceTab] = useState("dashboard");
 
   const handleLogout = async () => {
     try {
@@ -131,11 +134,6 @@ const Index = () => {
             <TabsTrigger value="sales" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <ShoppingCart className="mr-2 h-4 w-4" />
               Vendas
-            </TabsTrigger>
-            <TabsTrigger value="operations" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Clock className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Operações</span>
-              <span className="sm:hidden">Ops</span>
             </TabsTrigger>
 
 
@@ -283,14 +281,8 @@ const Index = () => {
             <SalesByPlatform />
           </TabsContent>
 
-          {/* Operations Tab */}
-          <TabsContent value="operations" className="space-y-6">
-            <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
-              <Clock className="h-6 w-6 text-primary" />
-              Tempos de Serviço
-            </h2>
-            <ServiceTimesTable />
-          </TabsContent>
+
+
 
 
 
@@ -300,7 +292,7 @@ const Index = () => {
           <TabsContent value="product" className="space-y-6">
             <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
               <Box className="h-6 w-6 text-primary" />
-              Gestão de Produto - Custos e Desvios
+              Gestão de Produto
             </h2>
             <Tabs defaultValue="dashboard" className="space-y-6">
               <TabsList>
@@ -310,7 +302,7 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="dashboard">
-                <CostsAnalysis />
+                <ProductDashboard />
               </TabsContent>
 
               <TabsContent value="inventory">
@@ -333,11 +325,46 @@ const Index = () => {
           <TabsContent value="service" className="space-y-6">
             <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
               <Headphones className="h-6 w-6 text-primary" />
-              Preenchimento de Dados de Serviço
+              Serviço
             </h2>
-            <ServiceDataForm />
+            <Tabs
+              value={serviceTab}
+              onValueChange={setServiceTab}
+              className="space-y-6"
+            >
+              <TabsList>
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="data">Dados</TabsTrigger>
+              </TabsList>
+              <TabsContent value="dashboard" key="service-dashboard">
+                <ServiceDashboard />
+              </TabsContent>
+              <TabsContent value="data" key="service-data">
+                <div className="p-4 bg-green-500 text-white mb-4">✓ Aba Dados Carregada!</div>
+                <ServiceDataForm />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
+          {/* People Tab */}
+          <TabsContent value="people" className="space-y-6">
+            <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
+              <UserCheck className="h-6 w-6 text-primary" />
+              Pessoas
+            </h2>
+            <Tabs defaultValue="dashboard" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="data">Dados</TabsTrigger>
+              </TabsList>
+              <TabsContent value="dashboard">
+                <PeopleDashboard />
+              </TabsContent>
+              <TabsContent value="data">
+                <PeopleDataForm />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
 
           {/* Maintenance Tab */}
           <TabsContent value="maintenance" className="space-y-6">
