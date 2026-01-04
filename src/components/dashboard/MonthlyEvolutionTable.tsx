@@ -88,13 +88,13 @@ export function MonthlyEvolutionTable({ results, onUpdate }: MonthlyEvolutionTab
                 <TableBody>
                     {metrics.map((mInfo) => (
                         <TableRow key={mInfo.name} className="border-b border-slate-400 hover:bg-[#A9D08E]/10 h-8 transition-colors">
-                            <TableCell className="border-r border-slate-400 py-0 px-2 text-[10px] font-medium sticky left-0 bg-white z-10">{mInfo.name}</TableCell>
+                            <TableCell className="border-r border-slate-400 py-1.5 px-2 text-[10px] font-medium sticky left-0 bg-white z-10">{mInfo.name}</TableCell>
                             {months.map(m => {
                                 const key = `${mInfo.name}-${m}`;
                                 return (
                                     <TableCell key={m} className="border-r border-slate-400 p-0 text-center">
                                         <Input
-                                            className="h-7 text-[10px] text-center bg-transparent border-none focus:bg-[#E2EFDA]/20 p-0 rounded-none"
+                                            className="h-7 text-[10px] text-center bg-transparent border border-slate-300/50 focus:bg-[#E2EFDA]/20 p-0 rounded-none"
                                             value={localValues[key] || ""}
                                             onChange={(e) => setLocalValues({ ...localValues, [key]: e.target.value })}
                                             onBlur={(e) => handleBlur(mInfo.name, mInfo.category, m, e.target.value)}
@@ -103,9 +103,9 @@ export function MonthlyEvolutionTable({ results, onUpdate }: MonthlyEvolutionTab
                                     </TableCell>
                                 );
                             })}
-                            <TableCell className="border-r border-slate-400 py-0 text-center text-[10px] font-bold bg-primary/5 text-primary">{getYTD(mInfo.name)}</TableCell>
-                            <TableCell className="border-r border-slate-400 py-0 text-center text-[10px]">-</TableCell>
-                            <TableCell className="py-0 text-center text-[10px]">-</TableCell>
+                            <TableCell className="border-r border-slate-400 py-1.5 text-center text-[10px] font-bold bg-primary/5 text-primary">{getYTD(mInfo.name)}</TableCell>
+                            <TableCell className="border-r border-slate-400 py-1.5 text-center text-[10px]">-</TableCell>
+                            <TableCell className="py-1.5 text-center text-[10px]">-</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

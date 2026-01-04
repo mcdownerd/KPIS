@@ -233,23 +233,23 @@ const DashboardPBorges = () => {
     setData(prev => {
       const novoValor = parseFloat(valor) || 0;
       const metricaAtual = prev.financeiro[metrica];
-      
+
       // Atualizar o campo modificado
       const metricaAtualizada = {
         ...metricaAtual,
         [campo]: novoValor
       };
-      
+
       // Recalcular as comparações automaticamente
       // PBvsRegião = (P.Borges - Região) * 100
       metricaAtualizada.pbvsRegiao = (metricaAtualizada.pborges - metricaAtualizada.regiao) * 100;
-      
+
       // PBvsTipo = (P.Borges - Tipologia) * 100
       metricaAtualizada.pbvsTipo = (metricaAtualizada.pborges - metricaAtualizada.tipologia) * 100;
-      
+
       // PBvsNac = (P.Borges - Nacional) * 100
       metricaAtualizada.pbvsNac = (metricaAtualizada.pborges - metricaAtualizada.nacional) * 100;
-      
+
       return {
         ...prev,
         financeiro: {
@@ -264,18 +264,18 @@ const DashboardPBorges = () => {
     setData(prev => {
       const novoValor = parseFloat(valor) || 0;
       const metricaAtual = prev.operacoes[metrica];
-      
+
       // Atualizar o campo modificado
       const metricaAtualizada = {
         ...metricaAtual,
         [campo]: novoValor
       };
-      
+
       // Recalcular automaticamente as variações
       if (metrica === 'temposServico' || metrica === 'temposDelivery') {
         // Variação = P.Borges - Objetivo
         metricaAtualizada.variacao = metricaAtualizada.pborges - metricaAtualizada.objetivo;
-        
+
         // YTD vs LY = P.Borges - LY
         if (metricaAtualizada.ly) {
           metricaAtualizada.ytdVsLy = metricaAtualizada.pborges - metricaAtualizada.ly;
@@ -283,7 +283,7 @@ const DashboardPBorges = () => {
       } else if (metrica === 'fastinsight') {
         // Variação = (P.Borges - Objetivo) * 100
         metricaAtualizada.variacao = (metricaAtualizada.pborges - metricaAtualizada.objetivo) * 100;
-        
+
         // YTD vs LY = (P.Borges - LY) * 100
         if (metricaAtualizada.ly) {
           metricaAtualizada.ytdVsLy = (metricaAtualizada.pborges - metricaAtualizada.ly) * 100;
@@ -292,7 +292,7 @@ const DashboardPBorges = () => {
         // Variação = -Objetivo (em percentagem)
         metricaAtualizada.variacao = -metricaAtualizada.objetivo;
       }
-      
+
       return {
         ...prev,
         operacoes: {
@@ -331,7 +331,7 @@ const DashboardPBorges = () => {
 
   return (
     <div className="min-h-screen bg-black p-6">
-      <div className="max-w-[1800px] mx-auto" style={{minWidth: '1400px'}}>
+      <div className="max-w-[1800px] mx-auto" style={{ minWidth: '1400px' }}>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-1">P.BORGES</h1>
@@ -340,9 +340,9 @@ const DashboardPBorges = () => {
 
         {/* Layout: FINANCEIRO (45%) | PACE (10%) | OPERAÇÕES (45%) - SEMPRE NA MESMA LINHA */}
         <div className="flex gap-3 mb-6">
-          
+
           {/* FINANCEIRO - 45% */}
-          <div style={{width: '45%'}} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+          <div style={{ width: '45%' }} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
             <div className="bg-[#9DC183] px-2 py-2 text-center">
               <h2 className="text-[10px] font-bold text-black">FINANCEIRO</h2>
             </div>
@@ -372,7 +372,7 @@ const DashboardPBorges = () => {
                         {key === 'pesoMOP' && 'Peso MOP'}
                       </td>
                       <td className="p-0.5">
-                        <input type="number" step="0.01" value={(valores.pborges * 100).toFixed(2)} 
+                        <input type="number" step="0.01" value={(valores.pborges * 100).toFixed(2)}
                           onChange={(e) => updateFinanceiro(key, 'pborges', parseFloat(e.target.value) / 100)}
                           className="w-full bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-center text-white text-[10px] focus:outline-none focus:border-zinc-600" />
                       </td>
@@ -405,7 +405,7 @@ const DashboardPBorges = () => {
           </div>
 
           {/* PACE - 10% */}
-          <div style={{width: '10%'}} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+          <div style={{ width: '10%' }} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
             <div className="bg-[#9DC183] px-2 py-1 text-center">
               <h2 className="text-[10px] font-bold text-black">PACE</h2>
             </div>
@@ -413,10 +413,10 @@ const DashboardPBorges = () => {
               {/* Grid 2x2 */}
               <div className="grid grid-cols-2 gap-1 mb-1">
                 <div className="bg-zinc-800 rounded flex items-center justify-center h-16">
-                  <span className="text-3xl font-bold text-white">{data.pace.atual}</span>
+                  <span className="text-3xl font-bold text-white">{Math.round(data.pace.atual)}</span>
                 </div>
                 <div className="bg-zinc-800 rounded flex items-center justify-center h-16">
-                  <span className="text-3xl font-bold text-white">{data.pace.meta}</span>
+                  <span className="text-3xl font-bold text-white">{Math.round(data.pace.meta)}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-1">
@@ -431,7 +431,7 @@ const DashboardPBorges = () => {
           </div>
 
           {/* OPERAÇÕES - 45% */}
-          <div style={{width: '45%'}} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+          <div style={{ width: '45%' }} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
             <div className="bg-[#9DC183] px-2 py-2 text-center">
               <h2 className="text-[10px] font-bold text-black">OPERAÇÕES</h2>
             </div>

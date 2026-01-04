@@ -12,51 +12,51 @@ export const ElectricityTable = ({ readings, onReadingChange }: ElectricityTable
     <div className="rounded-lg border bg-card overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[80px]">Dia</TableHead>
-            <TableHead className="min-w-[120px]">VAZIA</TableHead>
-            <TableHead className="min-w-[120px]">PONTA</TableHead>
-            <TableHead className="min-w-[120px]">CHEIA</TableHead>
-            <TableHead className="min-w-[120px]">S.VAZIA</TableHead>
+          <TableRow className="h-8">
+            <TableHead className="min-w-[80px] h-8 py-1.5 px-2">Dia</TableHead>
+            <TableHead className="min-w-[120px] h-8 py-1.5 px-2">VAZIA</TableHead>
+            <TableHead className="min-w-[120px] h-8 py-1.5 px-2">PONTA</TableHead>
+            <TableHead className="min-w-[120px] h-8 py-1.5 px-2">CHEIA</TableHead>
+            <TableHead className="min-w-[120px] h-8 py-1.5 px-2">S.VAZIA</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {readings.map((reading) => (
-            <TableRow key={reading.day}>
-              <TableCell className="font-medium">{reading.day}</TableCell>
-              <TableCell>
+            <TableRow key={reading.day} className="h-9">
+              <TableCell className="font-medium h-9 py-1 px-2">{reading.day}</TableCell>
+              <TableCell className="h-9 py-1 px-2">
                 <Input
                   type="number"
                   value={reading.vazia ?? ''}
                   onChange={(e) => onReadingChange(reading.day, 'vazia', e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-full"
+                  className="w-full h-7 text-xs"
                   placeholder="Contagem"
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="h-9 py-1 px-2">
                 <Input
                   type="number"
                   value={reading.ponta ?? ''}
                   onChange={(e) => onReadingChange(reading.day, 'ponta', e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-full"
+                  className="w-full h-7 text-xs"
                   placeholder="Contagem"
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="h-9 py-1 px-2">
                 <Input
                   type="number"
                   value={reading.cheia ?? ''}
                   onChange={(e) => onReadingChange(reading.day, 'cheia', e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-full"
+                  className="w-full h-7 text-xs"
                   placeholder="Contagem"
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="h-9 py-1 px-2">
                 <Input
                   type="number"
                   value={reading.sVazia ?? ''}
                   onChange={(e) => onReadingChange(reading.day, 'sVazia', e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-full"
+                  className="w-full h-7 text-xs"
                   placeholder="Contagem"
                 />
               </TableCell>

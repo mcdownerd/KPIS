@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useServiceTimesData } from "@/hooks/useServiceTimesData";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ServiceData {
   location: string;
@@ -61,14 +62,14 @@ export function ServiceTimesTable() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Localização</TableHead>
-                <TableHead>Almoço</TableHead>
-                <TableHead>Jantar</TableHead>
-                <TableHead>Dia</TableHead>
-                <TableHead>Ranking</TableHead>
-                <TableHead>Objetivo</TableHead>
-                <TableHead>Status</TableHead>
+              <TableRow className="h-8">
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Localização</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Almoço</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Jantar</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Dia</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Ranking</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Objetivo</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,15 +81,15 @@ export function ServiceTimesTable() {
                 </TableRow>
               ) : (
                 serviceTimesData.map((item) => (
-                  <TableRow key={item.location}>
-                    <TableCell className="font-medium">{item.location}</TableCell>
-                    <TableCell>{item.lunch}s</TableCell>
-                    <TableCell>{item.dinner}s</TableCell>
-                    <TableCell>{item.day}s</TableCell>
-                    <TableCell>#{item.rank}</TableCell>
-                    <TableCell>{item.target}s</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusColor(item.day, item.target)}>
+                  <TableRow key={item.location} className="h-8">
+                    <TableCell className="font-medium py-1.5 px-2 text-[10px] h-8">{item.location}</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.lunch}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.dinner}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.day}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">#{item.rank}</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.target}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">
+                      <Badge variant={getStatusColor(item.day, item.target)} className="text-[9px] h-4 px-1">
                         {item.day <= item.target ? "OK" : "NOK"}
                       </Badge>
                     </TableCell>
@@ -107,18 +108,18 @@ export function ServiceTimesTable() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Local</TableHead>
-                <TableHead>Jan</TableHead>
-                <TableHead>Fev</TableHead>
-                <TableHead>Mar</TableHead>
-                <TableHead>Abr</TableHead>
-                <TableHead>Mai</TableHead>
-                <TableHead>Jun</TableHead>
-                <TableHead>Jul</TableHead>
-                <TableHead>YTD</TableHead>
-                <TableHead>LY</TableHead>
-                <TableHead>Var</TableHead>
+              <TableRow className="h-8">
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Local</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Jan</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Fev</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Mar</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Abr</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Mai</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Jun</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Jul</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">YTD</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">LY</TableHead>
+                <TableHead className="py-1.5 px-2 text-[10px] h-8">Var</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -130,18 +131,18 @@ export function ServiceTimesTable() {
                 </TableRow>
               ) : (
                 monthlyData.map((item: any) => (
-                  <TableRow key={item.location}>
-                    <TableCell className="font-medium">{item.location}</TableCell>
-                    <TableCell>{item.jan}s</TableCell>
-                    <TableCell>{item.fev}s</TableCell>
-                    <TableCell>{item.mar}s</TableCell>
-                    <TableCell>{item.abr}s</TableCell>
-                    <TableCell>{item.mai}s</TableCell>
-                    <TableCell>{item.jun}s</TableCell>
-                    <TableCell>{item.jul}s</TableCell>
-                    <TableCell className="font-semibold">{item.ytd}s</TableCell>
-                    <TableCell>{item.ly}s</TableCell>
-                    <TableCell className={item.ytd < item.ly ? "text-success" : "text-destructive"}>
+                  <TableRow key={item.location} className="h-8">
+                    <TableCell className="font-medium py-1.5 px-2 text-[10px] h-8">{item.location}</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.jan}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.fev}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.mar}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.abr}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.mai}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.jun}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.jul}s</TableCell>
+                    <TableCell className="font-semibold py-1.5 px-2 text-[10px] h-8">{item.ytd}s</TableCell>
+                    <TableCell className="py-1.5 px-2 text-[10px] h-8">{item.ly}s</TableCell>
+                    <TableCell className={cn("py-1.5 px-2 text-[10px] h-8", item.ytd < item.ly ? "text-success" : "text-destructive")}>
                       {item.ytd - item.ly}s
                     </TableCell>
                   </TableRow>

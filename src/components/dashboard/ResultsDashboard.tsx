@@ -76,10 +76,10 @@ export function ResultsDashboard() {
     }, [localData, isLoaded]);
 
     // Helper to format values for display
-    const formatDisplay = (val: any) => {
+    const formatDisplay = (val: any, decimals: number = 2) => {
         if (val === null || val === undefined || val === '') return '-';
         if (typeof val === 'string') return val;
-        return val.toFixed(2).replace('.', ',');
+        return val.toFixed(decimals).replace('.', ',');
     };
 
     // Update local state when inputs change (this logic will need to be moved to the engine eventually)
@@ -489,10 +489,10 @@ export function ResultsDashboard() {
                     <CardContent className="p-0 flex-1 flex flex-col">
                         <div className="grid grid-cols-2 bg-[#d9ead3] dark:bg-zinc-900/50 border-b border-[#93c47d] dark:border-border/50">
                             <div className="py-2 text-center border-r border-[#93c47d] dark:border-border/50">
-                                <span className="text-base font-bold text-[#38761d] dark:text-white">{formatDisplay(localData.pace.atual)}</span>
+                                <span className="text-base font-bold text-[#38761d] dark:text-white">{formatDisplay(localData.pace.atual, 0)}</span>
                             </div>
                             <div className="py-2 text-center">
-                                <span className="text-base font-bold text-[#38761d] dark:text-white">{formatDisplay(localData.pace.meta)}</span>
+                                <span className="text-base font-bold text-[#38761d] dark:text-white">{formatDisplay(localData.pace.meta, 0)}</span>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 flex-1 bg-[#d9ead3] dark:bg-zinc-900">
@@ -735,7 +735,7 @@ export function ResultsDashboard() {
                                             const val = valores[m];
                                             const numVal = typeof val === 'string' ? parseFloat(val.replace(',', '.')) : val;
                                             const colorClass = numVal > 0 ? 'text-green-500' : numVal < 0 ? 'text-red-500' : '';
-                                            
+
                                             return (
                                                 <td key={m} className="p-1 text-center text-muted-foreground">
                                                     {['pbVsRegiao', 'pbVsTipologia', 'pbVsNacional', 'deliveryPB', 'gcsDeliveryPB'].includes(key) ? (

@@ -95,29 +95,31 @@ export function GoogleRatingsDashboard() {
             <div className="overflow-x-auto rounded-md border border-border/50 bg-card/30">
                 <Table>
                     <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b border-border/50">
-                            <TableHead className="font-bold text-foreground bg-muted/50">Google</TableHead>
+                        <TableRow className="hover:bg-transparent border-b border-border/50 h-8">
+                            <TableHead className="font-bold text-foreground bg-muted/50 h-8 py-1 px-2">Google</TableHead>
                             {shortMonths.map(m => (
-                                <TableHead key={m} className="text-center capitalize">{m}</TableHead>
+                                <TableHead key={m} className="text-center capitalize h-8 py-1 px-1">{m}</TableHead>
                             ))}
-                            <TableHead className="text-center font-bold text-primary bg-primary/5">OBJETIVO</TableHead>
+                            <TableHead className="text-center font-bold text-primary bg-primary/5 h-8 py-1 px-2">OBJETIVO</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {editData.map((item) => (
-                            <TableRow key={item.location} className="border-b border-border/50 hover:bg-muted/10">
-                                <TableCell className="font-medium bg-muted/20">{item.location}</TableCell>
+                            <TableRow key={item.location} className="border-b border-border/50 hover:bg-muted/10 h-9">
+                                <TableCell className="font-medium bg-muted/20 h-9 py-1 px-2">{item.location}</TableCell>
                                 {shortMonths.map(m => (
-                                    <TableCell key={m} className="p-1 relative">
-                                        <Input
-                                            type="number"
-                                            step="0.1"
-                                            value={item[m] || ''}
-                                            onChange={(e) => handleValueChange(item.location, m, e.target.value)}
-                                            onBlur={(e) => handleAutoSave(item.location, m, e.target.value)}
-                                            className={`h-8 w-16 text-center bg-transparent border-none focus:ring-1 focus:ring-primary/50 transition-colors ${savingCell === `${item.location}-${m}` ? 'opacity-50' : ''
-                                                }`}
-                                        />
+                                    <TableCell key={m} className="p-1 relative h-9">
+                                        <div className="flex items-center justify-center h-full">
+                                            <Input
+                                                type="number"
+                                                step="0.1"
+                                                value={item[m] || ''}
+                                                onChange={(e) => handleValueChange(item.location, m, e.target.value)}
+                                                onBlur={(e) => handleAutoSave(item.location, m, e.target.value)}
+                                                className={`h-7 w-16 text-center bg-transparent border border-border/30 focus:ring-1 focus:ring-primary/50 transition-colors text-[10px] px-1 ${savingCell === `${item.location}-${m}` ? 'opacity-50' : ''
+                                                    }`}
+                                            />
+                                        </div>
                                         {savingCell === `${item.location}-${m}` && (
                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                                 <Loader2 className="h-3 w-3 animate-spin text-primary" />
@@ -125,7 +127,7 @@ export function GoogleRatingsDashboard() {
                                         )}
                                     </TableCell>
                                 ))}
-                                <TableCell className="text-center font-bold text-primary bg-primary/5">
+                                <TableCell className="text-center font-bold text-primary bg-primary/5 h-9 py-1 px-2">
                                     {item.target}
                                 </TableCell>
                             </TableRow>

@@ -120,26 +120,26 @@ export const MaintenanceDashboard = () => {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead rowSpan={2}>Mês</TableHead>
-                    <TableHead colSpan={2} className="text-center border-r">Amadora (20)</TableHead>
-                    <TableHead colSpan={2} className="text-center">Queluz (32)</TableHead>
+                  <TableRow className="h-8">
+                    <TableHead rowSpan={2} className="py-1.5 px-2 text-[10px] h-8">Mês</TableHead>
+                    <TableHead colSpan={2} className="text-center border-r py-1.5 px-2 text-[10px] h-8">Amadora (20)</TableHead>
+                    <TableHead colSpan={2} className="text-center py-1.5 px-2 text-[10px] h-8">Queluz (32)</TableHead>
                   </TableRow>
-                  <TableRow>
-                    <TableHead><Droplet className="inline h-4 w-4 mr-1" />Água (€)</TableHead>
-                    <TableHead className="border-r"><Zap className="inline h-4 w-4 mr-1" />Elet. (€)</TableHead>
-                    <TableHead><Droplet className="inline h-4 w-4 mr-1" />Água (€)</TableHead>
-                    <TableHead><Zap className="inline h-4 w-4 mr-1" />Elet. (€)</TableHead>
+                  <TableRow className="h-8">
+                    <TableHead className="py-1.5 px-2 text-[10px] h-8"><Droplet className="inline h-3 w-3 mr-1" />Água (€)</TableHead>
+                    <TableHead className="border-r py-1.5 px-2 text-[10px] h-8"><Zap className="inline h-3 w-3 mr-1" />Elet. (€)</TableHead>
+                    <TableHead className="py-1.5 px-2 text-[10px] h-8"><Droplet className="inline h-3 w-3 mr-1" />Água (€)</TableHead>
+                    <TableHead className="py-1.5 px-2 text-[10px] h-8"><Zap className="inline h-3 w-3 mr-1" />Elet. (€)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {utilityData.map((row) => (
-                    <TableRow key={row.mes}>
-                      <TableCell className="font-medium">{row.mes}</TableCell>
-                      <TableCell>{row.aguaAmd}</TableCell>
-                      <TableCell className="border-r">{row.eletAmd}</TableCell>
-                      <TableCell>{row.aguaQlz} €</TableCell>
-                      <TableCell>{row.eletQlz} €</TableCell>
+                    <TableRow key={row.mes} className="h-8">
+                      <TableCell className="font-medium py-1.5 px-2 text-[10px] h-8">{row.mes}</TableCell>
+                      <TableCell className="py-1.5 px-2 text-[10px] h-8">{row.aguaAmd}</TableCell>
+                      <TableCell className="border-r py-1.5 px-2 text-[10px] h-8">{row.eletAmd}</TableCell>
+                      <TableCell className="py-1.5 px-2 text-[10px] h-8">{row.aguaQlz} €</TableCell>
+                      <TableCell className="py-1.5 px-2 text-[10px] h-8">{row.eletQlz} €</TableCell>
                     </TableRow>
                   ))}
                   {utilityData.length === 0 && (
@@ -223,11 +223,11 @@ export const MaintenanceDashboard = () => {
                 <h3 className="font-semibold mb-4 text-lg">Amadora (20)</h3>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>CMP</TableHead>
-                      <TableHead>PL</TableHead>
-                      <TableHead>Aval.</TableHead>
+                    <TableRow className="h-8">
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">Mês</TableHead>
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">CMP</TableHead>
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">PL</TableHead>
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">Aval.</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -246,28 +246,28 @@ export const MaintenanceDashboard = () => {
                 <h3 className="font-semibold mb-4 text-lg">Queluz (32)</h3>
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Mês</TableHead>
-                      <TableHead>CMP</TableHead>
-                      <TableHead>PL</TableHead>
-                      <TableHead>Aval.</TableHead>
+                    <TableRow className="h-8">
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">Mês</TableHead>
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">CMP</TableHead>
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">PL</TableHead>
+                      <TableHead className="py-1.5 px-2 text-[10px] h-8">Aval.</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {performanceData.map((row) => (
-                      <TableRow key={row.mes}>
-                        <TableCell className="font-medium">{row.mes}</TableCell>
-                        <TableCell>
-                          <Badge variant={parseFloat(row.cmpQlz) >= 96 ? "default" : "destructive"}>
+                      <TableRow key={row.mes} className="h-8">
+                        <TableCell className="font-medium py-1.5 px-2 text-[10px] h-8">{row.mes}</TableCell>
+                        <TableCell className="py-1.5 px-2 text-[10px] h-8">
+                          <Badge variant={parseFloat(row.cmpQlz) >= 96 ? "default" : "destructive"} className="text-[9px] h-4 px-1">
                             {row.cmpQlz}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant={parseFloat(row.plQlz) >= 97 ? "default" : "destructive"}>
+                        <TableCell className="py-1.5 px-2 text-[10px] h-8">
+                          <Badge variant={parseFloat(row.plQlz) >= 97 ? "default" : "destructive"} className="text-[9px] h-4 px-1">
                             {row.plQlz}
                           </Badge>
                         </TableCell>
-                        <TableCell>{row.avalQlz}</TableCell>
+                        <TableCell className="py-1.5 px-2 text-[10px] h-8">{row.avalQlz}</TableCell>
                       </TableRow>
                     ))}
                     {performanceData.length === 0 && (

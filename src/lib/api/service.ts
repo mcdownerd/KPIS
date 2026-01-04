@@ -67,11 +67,17 @@ export async function getServiceTimeMetrics(month: string, storeId?: string) {
 // --- Quality Metrics ---
 export async function upsertQualityMetrics(data: any) {
     const { user, store_id } = await getUserStore()
+    return upsertQualityMetricsForStore(data, store_id);
+}
+
+export async function upsertQualityMetricsForStore(data: any, storeId: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
 
     const { data: existing } = await supabase
         .from('quality_metrics')
         .select('id')
-        .eq('store_id', store_id)
+        .eq('store_id', storeId)
         .eq('month_name', data.month_name)
         .eq('record_date', data.record_date)
         .maybeSingle()
@@ -88,7 +94,7 @@ export async function upsertQualityMetrics(data: any) {
     } else {
         const { data: inserted, error } = await supabase
             .from('quality_metrics')
-            .insert([{ ...data, store_id, created_by: user.id }])
+            .insert([{ ...data, store_id: storeId, created_by: user.id }])
             .select()
             .single()
         if (error) throw error
@@ -205,12 +211,20 @@ export async function upsertDigitalCommMetrics(data: any) {
     if (existing) {
         const { data: updated, error } = await supabase
             .from('digital_communication_metrics')
-            .update(data)
+            .update({ ...data, updated_at: new Date().toISOString() })
             .eq('id', existing.id)
             .select()
             .maybeSingle()
         if (error) throw error
         return updated
+    } else {
+        const { data: inserted, error } = await supabase
+            .from('digital_communication_metrics')
+            .insert([{ ...data, store_id, created_by: user.id }])
+            .select()
+            .maybeSingle()
+        if (error) throw error
+        return inserted
     }
 }
 

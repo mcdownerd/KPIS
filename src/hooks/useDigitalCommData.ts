@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getDigitalCommMetrics } from '@/lib/api/service'
+import { getDigitalCommMetrics, getQualityMetrics, getComplaintsMetrics, getUberMetrics } from '@/lib/api/service'
 import { toast } from 'sonner'
 
 interface MonthlyDigitalData {
@@ -11,6 +11,17 @@ interface MonthlyDigitalData {
 export function useDigitalCommData() {
     const [mloversData, setMloversData] = useState<MonthlyDigitalData[]>([])
     const [googleData, setGoogleData] = useState<MonthlyDigitalData[]>([])
+    const [deliveryData, setDeliveryData] = useState<MonthlyDigitalData[]>([])
+
+    // Uber Metrics
+    const [uberStarsData, setUberStarsData] = useState<MonthlyDigitalData[]>([])
+    const [uberTimesData, setUberTimesData] = useState<MonthlyDigitalData[]>([])
+    const [uberInaccuracyData, setUberInaccuracyData] = useState<MonthlyDigitalData[]>([])
+    const [uberAvailabilityData, setUberAvailabilityData] = useState<MonthlyDigitalData[]>([])
+    const [uberTotalTimeData, setUberTotalTimeData] = useState<MonthlyDigitalData[]>([])
+
+    const [qualityData, setQualityData] = useState<MonthlyDigitalData[]>([])
+    const [complaintsData, setComplaintsData] = useState<MonthlyDigitalData[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -27,22 +38,52 @@ export function useDigitalCommData() {
             const allMonthsData: any[] = []
 
             // Fetch data for all months
-            const promises = months.map(month => getDigitalCommMetrics(month))
-            const results = await Promise.all(promises)
+            const digitalPromises = months.map(month => getDigitalCommMetrics(month))
+            const uberPromises = months.map(month => getUberMetrics(month))
+            const qualityPromises = months.map(month => getQualityMetrics(month))
+            const complaintsPromises = months.map(month => getComplaintsMetrics(month))
 
-            results.forEach(data => {
-                if (data) {
-                    if (Array.isArray(data)) {
-                        allMonthsData.push(...data)
-                    } else {
-                        allMonthsData.push(data)
-                    }
-                }
+            const [digitalResults, uberResults, qualityResults, complaintsResults] = await Promise.all([
+                Promise.all(digitalPromises),
+                Promise.all(uberPromises),
+                Promise.all(qualityPromises),
+                Promise.all(complaintsPromises)
+            ])
+
+            const allDigitalData: any[] = []
+            digitalResults.forEach(data => {
+                if (data) Array.isArray(data) ? allDigitalData.push(...data) : allDigitalData.push(data)
+            })
+
+            const allUberData: any[] = []
+            uberResults.forEach(data => {
+                if (data) Array.isArray(data) ? allUberData.push(...data) : allUberData.push(data)
+            })
+
+            const allQualityData: any[] = []
+            qualityResults.forEach(data => {
+                if (data) Array.isArray(data) ? allQualityData.push(...data) : allQualityData.push(data)
+            })
+
+            const allComplaintsData: any[] = []
+            complaintsResults.forEach(data => {
+                if (data) Array.isArray(data) ? allComplaintsData.push(...data) : allComplaintsData.push(data)
             })
 
             // Process monthly evolution data
-            setMloversData(processMonthlyEvolution(allMonthsData, 'mlovers'))
-            setGoogleData(processMonthlyEvolution(allMonthsData, 'google_rating'))
+            setMloversData(processMonthlyEvolution(allDigitalData, 'mlovers'))
+            setGoogleData(processMonthlyEvolution(allDigitalData, 'google_rating'))
+            setDeliveryData(processMonthlyEvolution(allDigitalData, 'delivery_rating'))
+
+            // Process Uber Metrics
+            setUberStarsData(processMonthlyEvolution(allUberData, 'estrelas'))
+            setUberTimesData(processMonthlyEvolution(allUberData, 'tempos'))
+            setUberInaccuracyData(processMonthlyEvolution(allUberData, 'inexatidao'))
+            setUberAvailabilityData(processMonthlyEvolution(allUberData, 'ava_produto'))
+            setUberTotalTimeData(processMonthlyEvolution(allUberData, 'tempo_total'))
+
+            setQualityData(processMonthlyEvolution(allQualityData, 'sg'))
+            setComplaintsData(processMonthlyEvolution(allComplaintsData, 'total_complaints'))
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados digitais'
             console.error(errorMessage)
@@ -50,6 +91,9 @@ export function useDigitalCommData() {
             toast.error(errorMessage)
             setMloversData([])
             setGoogleData([])
+            setDeliveryData([])
+            setQualityData([])
+            setComplaintsData([])
         } finally {
             setLoading(false)
         }
@@ -107,6 +151,14 @@ export function useDigitalCommData() {
     return {
         mloversData,
         googleData,
+        uberStarsData,
+        uberTimesData,
+        uberInaccuracyData,
+        uberAvailabilityData,
+        uberTotalTimeData,
+        deliveryData,
+        qualityData,
+        complaintsData,
         loading,
         error,
         refetch: loadDigitalData

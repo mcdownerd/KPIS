@@ -340,7 +340,6 @@ const Index = () => {
                 <ServiceDashboard />
               </TabsContent>
               <TabsContent value="data" key="service-data">
-                <div className="p-4 bg-green-500 text-white mb-4">✓ Aba Dados Carregada!</div>
                 <ServiceDataForm />
               </TabsContent>
             </Tabs>

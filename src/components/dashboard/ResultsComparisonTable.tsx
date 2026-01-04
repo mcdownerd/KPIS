@@ -57,15 +57,15 @@ export function ResultsComparisonTable({ title, results, category, onUpdate }: R
             <div className="overflow-x-auto bg-[#E2EFDA]/30">
                 <Table className="border-collapse">
                     <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b border-slate-400 bg-white">
-                            <TableHead className="border-r border-slate-400 font-bold text-slate-800 h-7 text-[10px] px-2"></TableHead>
-                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-7 text-[10px] px-1">P.Borges</TableHead>
-                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-7 text-[10px] px-1">Região</TableHead>
-                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-7 text-[10px] px-1">PBvsRegião</TableHead>
-                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-7 text-[10px] px-1">Tipologia</TableHead>
-                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-7 text-[10px] px-1">PBvsTipo</TableHead>
-                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-7 text-[10px] px-1">Nacional</TableHead>
-                            <TableHead className="text-center font-bold text-slate-800 h-7 text-[10px] px-1">PBvsNac</TableHead>
+                        <TableRow className="hover:bg-transparent border-b border-slate-400 bg-white h-8">
+                            <TableHead className="border-r border-slate-400 font-bold text-slate-800 h-8 text-[10px] px-2"></TableHead>
+                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-8 text-[10px] px-1">P.Borges</TableHead>
+                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-8 text-[10px] px-1">Região</TableHead>
+                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-8 text-[10px] px-1">PBvsRegião</TableHead>
+                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-8 text-[10px] px-1">Tipologia</TableHead>
+                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-8 text-[10px] px-1">PBvsTipo</TableHead>
+                            <TableHead className="border-r border-slate-400 text-center font-bold text-slate-800 h-8 text-[10px] px-1">Nacional</TableHead>
+                            <TableHead className="text-center font-bold text-slate-800 h-8 text-[10px] px-1">PBvsNac</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -75,47 +75,47 @@ export function ResultsComparisonTable({ title, results, category, onUpdate }: R
                             const pbVsNac = getVariation(row.pb_value, row.national_value);
 
                             return (
-                                <TableRow key={row.id} className="border-b border-slate-400 hover:bg-[#A9D08E]/10 bg-white/50 h-7 transition-colors">
-                                    <TableCell className="border-r border-slate-400 py-0 px-2 text-[10px] font-medium text-slate-700 bg-[#E2EFDA]/50">{row.metric_name}</TableCell>
-                                    <TableCell className="border-r border-slate-400 p-0 text-center">
+                                <TableRow key={row.id} className="border-b border-slate-400 hover:bg-[#A9D08E]/10 bg-white/50 h-9 transition-colors">
+                                    <TableCell className="border-r border-slate-400 py-1 px-2 text-[10px] font-medium text-slate-700 bg-[#E2EFDA]/50 h-9">{row.metric_name}</TableCell>
+                                    <TableCell className="border-r border-slate-400 p-0 text-center h-9">
                                         <Input
-                                            className="h-6 text-[10px] text-center bg-transparent border-none focus:bg-white p-0 rounded-none"
+                                            className="h-7 text-[10px] text-center bg-transparent border border-slate-300/50 focus:bg-white p-0 rounded-none"
                                             value={localValues[`${row.id}-pb`] || ""}
                                             onChange={(e) => setLocalValues({ ...localValues, [`${row.id}-pb`]: e.target.value })}
                                             onBlur={(e) => handleBlur(row, 'pb_value', e.target.value)}
                                         />
                                     </TableCell>
-                                    <TableCell className="border-r border-slate-400 p-0 text-center">
+                                    <TableCell className="border-r border-slate-400 p-0 text-center h-9">
                                         <Input
-                                            className="h-6 text-[10px] text-center bg-transparent border-none focus:bg-white p-0 rounded-none"
+                                            className="h-7 text-[10px] text-center bg-transparent border border-slate-300/50 focus:bg-white p-0 rounded-none"
                                             value={localValues[`${row.id}-region`] || ""}
                                             onChange={(e) => setLocalValues({ ...localValues, [`${row.id}-region`]: e.target.value })}
                                             onBlur={(e) => handleBlur(row, 'region_value', e.target.value)}
                                         />
                                     </TableCell>
-                                    <TableCell className="border-r border-slate-400 py-0 px-1 text-center text-[10px] font-bold text-slate-900 bg-[#E2EFDA]/80">
+                                    <TableCell className="border-r border-slate-400 py-1 px-1 text-center text-[10px] font-bold text-slate-900 bg-[#E2EFDA]/80 h-9">
                                         {pbVsReg !== null ? pbVsReg.toFixed(2).replace('.', ',') : ""}
                                     </TableCell>
-                                    <TableCell className="border-r border-slate-400 p-0 text-center">
+                                    <TableCell className="border-r border-slate-400 p-0 text-center h-9">
                                         <Input
-                                            className="h-6 text-[10px] text-center bg-transparent border-none focus:bg-white p-0 rounded-none"
+                                            className="h-7 text-[10px] text-center bg-transparent border border-slate-300/50 focus:bg-white p-0 rounded-none"
                                             value={localValues[`${row.id}-typology`] || ""}
                                             onChange={(e) => setLocalValues({ ...localValues, [`${row.id}-typology`]: e.target.value })}
                                             onBlur={(e) => handleBlur(row, 'typology_value', e.target.value)}
                                         />
                                     </TableCell>
-                                    <TableCell className="border-r border-slate-400 py-0 px-1 text-center text-[10px] font-bold text-slate-900 bg-[#E2EFDA]/80">
+                                    <TableCell className="border-r border-slate-400 py-1 px-1 text-center text-[10px] font-bold text-slate-900 bg-[#E2EFDA]/80 h-9">
                                         {pbVsTipo !== null ? pbVsTipo.toFixed(2).replace('.', ',') : ""}
                                     </TableCell>
-                                    <TableCell className="border-r border-slate-400 p-0 text-center">
+                                    <TableCell className="border-r border-slate-400 p-0 text-center h-9">
                                         <Input
-                                            className="h-6 text-[10px] text-center bg-transparent border-none focus:bg-white p-0 rounded-none"
+                                            className="h-7 text-[10px] text-center bg-transparent border border-slate-300/50 focus:bg-white p-0 rounded-none"
                                             value={localValues[`${row.id}-national`] || ""}
                                             onChange={(e) => setLocalValues({ ...localValues, [`${row.id}-national`]: e.target.value })}
                                             onBlur={(e) => handleBlur(row, 'national_value', e.target.value)}
                                         />
                                     </TableCell>
-                                    <TableCell className="py-0 px-1 text-center text-[10px] font-bold text-slate-900 bg-[#E2EFDA]/80">
+                                    <TableCell className="py-1 px-1 text-center text-[10px] font-bold text-slate-900 bg-[#E2EFDA]/80 h-9">
                                         {pbVsNac !== null ? pbVsNac.toFixed(2).replace('.', ',') : ""}
                                     </TableCell>
                                 </TableRow>

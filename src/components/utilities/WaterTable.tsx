@@ -17,11 +17,11 @@ export const WaterTable = ({ readings, onReadingChange, waterPricePerM3 }: Water
       </div>
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[80px]">Dia</TableHead>
-            <TableHead className="min-w-[120px]">Contagem</TableHead>
-            <TableHead className="min-w-[100px] text-right">M³ Gastos</TableHead>
-            <TableHead className="min-w-[100px] text-right">€ Gastos</TableHead>
+          <TableRow className="h-8">
+            <TableHead className="min-w-[80px] h-8 py-1.5 px-2">Dia</TableHead>
+            <TableHead className="min-w-[120px] h-8 py-1.5 px-2">Contagem</TableHead>
+            <TableHead className="min-w-[100px] text-right h-8 py-1.5 px-2">M³ Gastos</TableHead>
+            <TableHead className="min-w-[100px] text-right h-8 py-1.5 px-2">€ Gastos</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -33,19 +33,19 @@ export const WaterTable = ({ readings, onReadingChange, waterPricePerM3 }: Water
             const euroSpent = m3Used * waterPricePerM3;
 
             return (
-              <TableRow key={reading.day}>
-                <TableCell className="font-medium">{reading.day}</TableCell>
-                <TableCell>
+              <TableRow key={reading.day} className="h-9">
+                <TableCell className="font-medium h-9 py-1 px-2">{reading.day}</TableCell>
+                <TableCell className="h-9 py-1 px-2">
                   <Input
                     type="number"
                     value={reading.reading ?? ''}
                     onChange={(e) => onReadingChange(reading.day, e.target.value ? parseFloat(e.target.value) : null)}
-                    className="w-full"
+                    className="w-full h-7 text-xs"
                     placeholder="Contagem"
                   />
                 </TableCell>
-                <TableCell className="text-right font-medium">{m3Used.toFixed(0)}</TableCell>
-                <TableCell className="text-right font-medium">{formatCurrency(euroSpent)}</TableCell>
+                <TableCell className="text-right font-medium h-9 py-1 px-2">{m3Used.toFixed(0)}</TableCell>
+                <TableCell className="text-right font-medium h-9 py-1 px-2">{formatCurrency(euroSpent)}</TableCell>
               </TableRow>
             );
           })}
